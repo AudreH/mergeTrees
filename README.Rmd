@@ -1,0 +1,20 @@
+---
+title: "README"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Installation
+
+```{r}
+library(devtools)
+devtools::install_github("AudreyH/Rmergetrees")
+# devtools::install_github("jchiquet/aricode")
+```
+
+#  
+
