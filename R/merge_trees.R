@@ -1,4 +1,4 @@
-library(Rcpp)
+# library(Rcpp)
 # sourceCpp("prune_splits.cpp")
 # sourceCpp("hcToPath.cpp")
 # source("generate_splits.R")
