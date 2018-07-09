@@ -35,9 +35,9 @@ List hcToPath_cpp(List successives_steps,
   // merge is ordered according to height already.
 
   // Initialization: vectors to build the response matrix
-  IntegerVector minVector((n-1), 0);
-  IntegerVector splitVector((n-1), 0);
-  IntegerVector maxVector((n-1), 0);
+  IntegerVector minVector;
+  IntegerVector splitVector;
+  IntegerVector maxVector;
   // IntegerVector heightVector(n, 0); // height already known...
 
   int i = 0 ;
@@ -46,6 +46,7 @@ List hcToPath_cpp(List successives_steps,
   
     if((merge1(i,0) < 0) & (merge1(i,1) < 0)){
       // Case 1: two single elements to merge
+      // printf("CASE 1") ;
       
       int el1 = match_func_int(merge1(i,0), order1) ;
       int el2 = match_func_int(merge1(i,1), order1) ;
@@ -80,7 +81,8 @@ List hcToPath_cpp(List successives_steps,
     } // End if case 1
     else if((merge1(i,0) < 0 ) & (merge1(i,1) > 0)){
       // Second case: first is a singleton, second is a cluster
-
+      // printf("CASE 2") ;
+      
       int el_singleton = match_func_int(merge1(i,0), order1) ; // element singleton
       NumericVector el_cluster = successives_steps[merge1(i,1)-1] ;
 
@@ -118,7 +120,8 @@ List hcToPath_cpp(List successives_steps,
     }// End else if case 2
     else if((merge1(i,0) > 0) & (merge1(i,1)< 0)){
       // Third case: first is a cluster, second is a singleton
-
+      // printf("CASE 3") ;
+      
       int el_singleton = match_func_int(merge1(i,1), order1) ; // element singleton
       NumericVector el_cluster = successives_steps[merge1(i,0)-1] ;
 
@@ -155,7 +158,8 @@ List hcToPath_cpp(List successives_steps,
     }// End else if case 3
     else if((merge1(i,0) > 0) & (merge1(i,1) > 0)){
       // Last case: both are already defined clusters
-
+      // printf("CASE 4") ;
+      
       NumericVector el_cluster1 = successives_steps[merge1(i,0)-1] ;
       NumericVector el_cluster2 = successives_steps[merge1(i,1)-1] ;
       
