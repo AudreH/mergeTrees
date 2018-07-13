@@ -75,7 +75,12 @@ hcToPath = function(hc.object){
   return(list(path = path[nrow(path):1,], order = -order1))
 }
 
-merge.trees = function(hc.list, standardize = FALSE){
+#' Merge a set of hclust objet into a single tree
+#'
+#' @param hc.list a list with a least one hclust object to be merge in a single consensus tree
+#' @param standardize a boolean indicating wether the heights of the different trees should be normalized before merged
+#' @export
+mergeTrees = function(hc.list, standardize = FALSE){
   n = length(hc.list[[1]]$order) # tous les arbres doivent avoir le meme nombre d'element.
   p = length(hc.list)
 
@@ -93,20 +98,20 @@ merge.trees = function(hc.list, standardize = FALSE){
   # In case the trees have different labels: no merging possible (we do'nt know the corresponding labels between the trees)
   # TO DO : add a break here in case all the labels are not identical to those from the first tree.
 
-  labels_list = lapply(list.trees, FUN = function(x){return(x$labels)})
+  labels_list = lapply(hc.list, FUN = function(x){return(x$labels)})
   # orders_list = lapply(list.trees)
 
   # reference: les labels/order of the first tree in the list
   if(!is.null(labels_list[[1]])){
     labels.equal = lapply(labels_list, FUN = function(x) identical(x, labels_list[[1]]))
 
-    list.trees = lapply(1:length(list.trees), FUN = function(x){
+    hc.list = lapply(1:length(hc.list), FUN = function(x){
       if(labels.equal[[x]] == FALSE){
-        list.trees[[x]]$labels = list.trees[[x]]$labels[order(match(list.trees[[x]]$labels, list.trees[[1]]$labels))]
-        list.trees[[x]]$order = list.trees[[x]]$order[order(match(list.trees[[x]]$labels, list.trees[[1]]$order))]
+        hc.list[[x]]$labels = hc.list[[x]]$labels[order(match(hc.list[[x]]$labels, hc.list[[1]]$labels))]
+        hc.list[[x]]$order = hc.list[[x]]$order[order(match(hc.list[[x]]$labels, hc.list[[1]]$order))]
       }else{
       }
-      return(list.trees[[x]])
+      return(hc.list[[x]])
     })
   }
 
@@ -163,7 +168,7 @@ merge.trees = function(hc.list, standardize = FALSE){
   Height <- rev(lambdaRules)
   if(length(Height)!=(n-1)){Height = c(rep(0, n-1-length(Height)), Height)} # pas de raisons ici, mais bon...
 
-  Cluster <- list(merge = MatriceMerge, height = Height, order = Order, labels = list.trees[[1]]$labels)
+  Cluster <- list(merge = MatriceMerge, height = Height, order = Order, labels = hc.list[[1]]$labels)
   Cluster <- unclass(Cluster)
   class(Cluster) <- "hclust"
 
