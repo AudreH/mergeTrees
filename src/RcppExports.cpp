@@ -5,15 +5,15 @@
 
 using namespace Rcpp;
 
-// match_func_int
-int match_func_int(int x, IntegerVector y);
-RcppExport SEXP _Rmergetrees_match_func_int(SEXP xSEXP, SEXP ySEXP) {
+// createMergeMatrix
+IntegerMatrix createMergeMatrix(int n, IntegerMatrix prune_res);
+RcppExport SEXP _Rmergetrees_createMergeMatrix(SEXP nSEXP, SEXP prune_resSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type x(xSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(match_func_int(x, y));
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type prune_res(prune_resSEXP);
+    rcpp_result_gen = Rcpp::wrap(createMergeMatrix(n, prune_res));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -28,6 +28,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< IntegerVector >::type order1(order1SEXP);
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
     rcpp_result_gen = Rcpp::wrap(hcToPath_cpp(successives_steps, merge1, order1, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// match_func_int
+int match_func_int(int x, IntegerVector y);
+RcppExport SEXP _Rmergetrees_match_func_int(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type x(xSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(match_func_int(x, y));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -47,8 +59,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_Rmergetrees_match_func_int", (DL_FUNC) &_Rmergetrees_match_func_int, 2},
+    {"_Rmergetrees_createMergeMatrix", (DL_FUNC) &_Rmergetrees_createMergeMatrix, 2},
     {"_Rmergetrees_hcToPath_cpp", (DL_FUNC) &_Rmergetrees_hcToPath_cpp, 4},
+    {"_Rmergetrees_match_func_int", (DL_FUNC) &_Rmergetrees_match_func_int, 2},
     {"_Rmergetrees_pruneSplits", (DL_FUNC) &_Rmergetrees_pruneSplits, 4},
     {NULL, NULL, 0}
 };

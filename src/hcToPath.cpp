@@ -1,37 +1,31 @@
 #include <Rcpp.h>
-// #include <vector>
-// #include <iostream>
-// #include <string>
+#include "match_func_int.h"
 using namespace Rcpp;
 
-
-// // Function match for Cpp (character)
-// // https://github.com/hadley/adv-r/blob/master/extras/cpp/match.cpp
-
-// Fonction match faite dans l'optique ou de toute facon on trouvera les elements de "x" dans ceux d'"y"
-// et une seule et unique fois.
-
-// [[Rcpp::export]]
-int match_func_int(int x, IntegerVector y){
-  int out; // integer de la position de x dans y
-  int position = 0 ; 
-  int j = 0;
-  while(position == 0){
-    if(x == y(j)){position = 1; out = j ;}
-    j++;
-  }
-  return out ;
-}
+// // Fonction match faite dans l'optique ou de toute facon on trouvera les elements de "x" dans ceux d'"y"
+// // et une seule et unique fois.
+//
+// // [[Rcpp::export]]
+// int match_func_int(int x, IntegerVector y){
+//   int out; // integer de la position de x dans y
+//   int position = 0 ;
+//   int j = 0;
+//   while(position == 0){
+//     if(x == y(j)){position = 1; out = j ;}
+//     j++;
+//   }
+//   return out ;
+// }
 
 // [[Rcpp::export]]
 List hcToPath_cpp(List successives_steps,
-                  IntegerMatrix merge1, 
+                  IntegerMatrix merge1,
                   IntegerVector order1, // needs to be all negative !!!! convert before apply this function
                   int n
                  ){
-  
+
   // printf("characters\n") ;
-  
+
   // merge is ordered according to height already.
 
   // Initialization: vectors to build the response matrix
@@ -43,11 +37,11 @@ List hcToPath_cpp(List successives_steps,
   int i = 0 ;
 
   while(i<(n-1)){ // merge a n-1 lignes, donc de 0 a (n-2) ?
-  
+
     if((merge1(i,0) < 0) & (merge1(i,1) < 0)){
       // Case 1: two single elements to merge
       // printf("CASE 1") ;
-      
+
       int el1 = match_func_int(merge1(i,0), order1) ;
       int el2 = match_func_int(merge1(i,1), order1) ;
       int position = 0;
@@ -65,7 +59,7 @@ List hcToPath_cpp(List successives_steps,
         minus = el2 ;
         split = el2 ;
         maximum = el1 ;
-        
+
       }else{
 
         minus = el1 ;
@@ -73,7 +67,7 @@ List hcToPath_cpp(List successives_steps,
         maximum = el2 ;
 
       }
-      
+
       minVector.push_back(minus) ;
       splitVector.push_back(split) ;
       maxVector.push_back(maximum) ;
@@ -82,7 +76,7 @@ List hcToPath_cpp(List successives_steps,
     else if((merge1(i,0) < 0 ) & (merge1(i,1) > 0)){
       // Second case: first is a singleton, second is a cluster
       // printf("CASE 2") ;
-      
+
       int el_singleton = match_func_int(merge1(i,0), order1) ; // element singleton
       NumericVector el_cluster = successives_steps[merge1(i,1)-1] ;
 
@@ -116,12 +110,12 @@ List hcToPath_cpp(List successives_steps,
       minVector.push_back(minus) ;
       splitVector.push_back(split) ;
       maxVector.push_back(maximum) ;
-    
+
     }// End else if case 2
     else if((merge1(i,0) > 0) & (merge1(i,1)< 0)){
       // Third case: first is a cluster, second is a singleton
       // printf("CASE 3") ;
-      
+
       int el_singleton = match_func_int(merge1(i,1), order1) ; // element singleton
       NumericVector el_cluster = successives_steps[merge1(i,0)-1] ;
 
@@ -159,10 +153,10 @@ List hcToPath_cpp(List successives_steps,
     else if((merge1(i,0) > 0) & (merge1(i,1) > 0)){
       // Last case: both are already defined clusters
       // printf("CASE 4") ;
-      
+
       NumericVector el_cluster1 = successives_steps[merge1(i,0)-1] ;
       NumericVector el_cluster2 = successives_steps[merge1(i,1)-1] ;
-      
+
       int position = 0;
       if(max(el_cluster1)<max(el_cluster2)) position = 1 ;
 
