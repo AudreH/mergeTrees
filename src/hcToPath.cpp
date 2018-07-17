@@ -2,21 +2,6 @@
 #include "match_func_int.h"
 using namespace Rcpp;
 
-// // Fonction match faite dans l'optique ou de toute facon on trouvera les elements de "x" dans ceux d'"y"
-// // et une seule et unique fois.
-//
-// // [[Rcpp::export]]
-// int match_func_int(int x, IntegerVector y){
-//   int out; // integer de la position de x dans y
-//   int position = 0 ;
-//   int j = 0;
-//   while(position == 0){
-//     if(x == y(j)){position = 1; out = j ;}
-//     j++;
-//   }
-//   return out ;
-// }
-
 // [[Rcpp::export]]
 List hcToPath_cpp(List successives_steps,
                   IntegerMatrix merge1,

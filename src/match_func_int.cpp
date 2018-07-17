@@ -19,3 +19,13 @@ int match_func_int(int x, IntegerVector y){
   return out ;
 }
 // endif;
+
+// Match function returning a vector
+// [[Rcpp::export]]
+IntegerVector match_func_vectorInt(int x, IntegerVector y){
+  IntegerVector out; // integer de la position de x dans y
+  for(int i=0; i<y.length(); i++){
+    if(x == y(i)){out.push_back(i) ;}
+  }
+  return out ;
+}

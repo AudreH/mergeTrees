@@ -13,6 +13,10 @@ match_func_int <- function(x, y) {
     .Call('_Rmergetrees_match_func_int', PACKAGE = 'Rmergetrees', x, y)
 }
 
+match_func_vectorInt <- function(x, y) {
+    .Call('_Rmergetrees_match_func_vectorInt', PACKAGE = 'Rmergetrees', x, y)
+}
+
 pruneSplits <- function(listSetRules, orderRules, n, p) {
     .Call('_Rmergetrees_pruneSplits', PACKAGE = 'Rmergetrees', listSetRules, orderRules, n, p)
 }

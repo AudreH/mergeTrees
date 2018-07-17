@@ -43,6 +43,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// match_func_vectorInt
+IntegerVector match_func_vectorInt(int x, IntegerVector y);
+RcppExport SEXP _Rmergetrees_match_func_vectorInt(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type x(xSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(match_func_vectorInt(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pruneSplits
 List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p);
 RcppExport SEXP _Rmergetrees_pruneSplits(SEXP listSetRulesSEXP, SEXP orderRulesSEXP, SEXP nSEXP, SEXP pSEXP) {
@@ -62,6 +74,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_Rmergetrees_createMergeMatrix", (DL_FUNC) &_Rmergetrees_createMergeMatrix, 2},
     {"_Rmergetrees_hcToPath_cpp", (DL_FUNC) &_Rmergetrees_hcToPath_cpp, 4},
     {"_Rmergetrees_match_func_int", (DL_FUNC) &_Rmergetrees_match_func_int, 2},
+    {"_Rmergetrees_match_func_vectorInt", (DL_FUNC) &_Rmergetrees_match_func_vectorInt, 2},
     {"_Rmergetrees_pruneSplits", (DL_FUNC) &_Rmergetrees_pruneSplits, 4},
     {NULL, NULL, 0}
 };
