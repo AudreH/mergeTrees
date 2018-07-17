@@ -20,19 +20,6 @@ hcToPath = function(hc.object){
 #' @param standardize a boolean indicating wether the heights of the different trees should be normalized before merged
 #' @export
 mergeTrees = function(hc.list, standardize = FALSE){
-  # library(Rcpp)
-  # sourceCpp("src/prune_splits.cpp")
-  # sourceCpp("src/hcToPath.cpp")
-  # source("R/agregation_to_hc.R")
-  # source("R/generate_splits.R")
-  #
-  # sourceCpp("src/createMergeMatrix.cpp")
-  #
-  # hc_1 <- hclust(dist(iris[, 1:4], "euclidean"), method = "ward.D2")
-  # hc_2 <- hclust(dist(iris[, 1:4], "euclidean"), method = "complete")
-  # tree.list = list(hc_1, hc_2)
-  # hc.list = tree.list # TODO A SUPPRIMER
-
   n = length(hc.list[[1]]$order) # tous les arbres doivent avoir le meme nombre d'element.
   p = length(hc.list)
 
@@ -51,7 +38,6 @@ mergeTrees = function(hc.list, standardize = FALSE){
   # TO DO : add a break here in case all the labels are not identical to those from the first tree.
 
   labels_list = lapply(hc.list, FUN = function(x){return(x$labels)})
-  # orders_list = lapply(list.trees)
 
   # reference: les labels/order of the first tree in the list
   if(!is.null(labels_list[[1]])){
@@ -109,13 +95,11 @@ mergeTrees = function(hc.list, standardize = FALSE){
   mat_aide3 = mat_aide2[,order(mat_aide2[l_groupeAct,], decreasing = TRUE)]
   matrice_aide2 = mat_aide3[-5,]
   # save(matrice_aide2, file = "prune_res.RData")
-  # matrice_aide3 = matrice_aide2[-4,]
 
   # Matrice Merge :
-  # MatriceMerge = CreationMatriceMerge(n, matrice_aide2)
-  # print("J'arrive jusqu'a la creation de la matrice merge!!!")
+  # MatriceMerge = CreationMatriceMerge(n, matrice_aide2) # old version of the function, in R code
   mergeMatrix = createMergeMatrix(n, matrice_aide2)
-  mergeMatrix[mergeMatrix<=n] <- -mergeMatrix[mergeMatrix<=n] # les elements commencent a 1 en R pas en Cpp
+  mergeMatrix[mergeMatrix<=n] <- -mergeMatrix[mergeMatrix<=n] # number starts at 1 in R, 0 in Cpp
   mergeMatrix[mergeMatrix>n] <- mergeMatrix[mergeMatrix>n]-n
 
   # Ordre :

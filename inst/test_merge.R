@@ -1,8 +1,14 @@
-rm(list = ls())
+# rm(list = ls())
+library(devtools)
+# devtools::install_github("AudreH/Rmergetrees")
+build()
+install()
 library(Rmergetrees)
 
 hc_1 <- hclust(dist(iris[, 1:4], "euclidean"), method = "ward.D2")
 hc_2 <- hclust(dist(iris[, 1:4], "euclidean"), method = "complete")
+
+tree.list = list(hc_1, hc_2)
 
 hc_merged <- mergeTrees(list(hc_1, hc_2))
 

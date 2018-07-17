@@ -1,12 +1,7 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// #ifndef MATCH_FUNC_INT_H
-// #define MATCH_FUNC_INT_H
-
-// Fonction match faite dans l'optique ou de toute facon on trouvera les elements de "x" dans ceux d'"y"
-// et une seule et unique fois.
-
+// Match function: assume there IS a match, and that only the first is interesting to return.
 // [[Rcpp::export]]
 int match_func_int(int x, IntegerVector y){
   int out; // integer de la position de x dans y
@@ -18,9 +13,8 @@ int match_func_int(int x, IntegerVector y){
   }
   return out ;
 }
-// endif;
 
-// Match function returning a vector
+// Match function returning a vector: assume there IS at least one match.
 // [[Rcpp::export]]
 IntegerVector match_func_vectorInt(int x, IntegerVector y){
   IntegerVector out; // integer de la position de x dans y
