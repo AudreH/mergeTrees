@@ -23,6 +23,11 @@ mergeTrees = function(hc.list, standardize = FALSE){
   n = length(hc.list[[1]]$order) # tous les arbres doivent avoir le meme nombre d'element.
   p = length(hc.list)
 
+  #############################################
+  # ----- Standardization : -------------------
+  #############################################
+  # fix tree comparisons issues.
+
   if(standardize){
     hc.list = lapply(hc.list, FUN = function(x){
       x$height = x$height/max(x$height) # tous compris entre 0 et 1
