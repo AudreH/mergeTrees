@@ -1,25 +1,26 @@
-hcToPath = function(hc.object){
-  successives.steps = list()
-  merge1 = hc.object$merge
-  order1 = -hc.object$order # topolical order for a tree
-  height1 = hc.object$height
-  vect = list()
-
-  vectors = hcToPath_cpp(successives.steps, merge1, order1, n = length(order1))
-
-  path = do.call("cbind", vectors)
-  path = path +1 # Cpp starts from 0, R starts from 1
-  path = cbind(path, height1)
-
-  return(list(path = path[nrow(path):1,], order = -order1))
-}
-
 #' Merge a set of hclust objet into a single tree
 #'
 #' @param hc.list a list with a least one hclust object to be merge in a single consensus tree
 #' @param standardize a boolean indicating wether the heights of the different trees should be normalized before merged
 #' @export
 mergeTrees = function(hc.list, standardize = FALSE){
+
+  # REMOVE THIS : THIS IS FOR TESTING ONLY
+  # library(Rcpp)
+  # sourceCpp("src/hcToPath.cpp")
+  # sourceCpp("src/prune_splits.cpp")
+  # sourceCpp("src/createMergeMatrix.cpp")
+  # source("R/agregation_to_hc.R")
+  # source("R/generate_splits.R")
+  # source("R/hcToPath.R")
+  #
+  # hc_1 <- hclust(dist(iris[, 1:4], "euclidean"), method = "ward.D2")
+  # hc_2 <- hclust(dist(iris[, 1:4], "euclidean"), method = "complete")
+  #
+  # hc.list = list(hc_1, hc_2)
+  ###
+
+
   n = length(hc.list[[1]]$order) # tous les arbres doivent avoir le meme nombre d'element.
   p = length(hc.list)
 
@@ -62,7 +63,7 @@ mergeTrees = function(hc.list, standardize = FALSE){
   # ----- Reconstitution paths : -------------
   #############################################
 
-  DataSets = lapply(hc.list, FUN = function(hc.object) return(hcToPath(hc.object)))
+  DataSets = lapply(hc.list, FUN = function(hc.object) return(hcToPath(hc.object, n = n)))
 
   lSetRules  <- lapply(DataSets, function(path.hc) list(rules = path.hc$path,
                                                         lambda.rules = path.hc$path[,4],

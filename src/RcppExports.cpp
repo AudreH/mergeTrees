@@ -18,16 +18,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // hcToPath_cpp
-List hcToPath_cpp(List successives_steps, IntegerMatrix merge1, IntegerVector order1, int n);
-RcppExport SEXP _Rmergetrees_hcToPath_cpp(SEXP successives_stepsSEXP, SEXP merge1SEXP, SEXP order1SEXP, SEXP nSEXP) {
+List hcToPath_cpp(IntegerMatrix merge1, IntegerVector match_order, int n);
+RcppExport SEXP _Rmergetrees_hcToPath_cpp(SEXP merge1SEXP, SEXP match_orderSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type successives_steps(successives_stepsSEXP);
     Rcpp::traits::input_parameter< IntegerMatrix >::type merge1(merge1SEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type order1(order1SEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type match_order(match_orderSEXP);
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(hcToPath_cpp(successives_steps, merge1, order1, n));
+    rcpp_result_gen = Rcpp::wrap(hcToPath_cpp(merge1, match_order, n));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -72,7 +71,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rmergetrees_createMergeMatrix", (DL_FUNC) &_Rmergetrees_createMergeMatrix, 2},
-    {"_Rmergetrees_hcToPath_cpp", (DL_FUNC) &_Rmergetrees_hcToPath_cpp, 4},
+    {"_Rmergetrees_hcToPath_cpp", (DL_FUNC) &_Rmergetrees_hcToPath_cpp, 3},
     {"_Rmergetrees_match_func_int", (DL_FUNC) &_Rmergetrees_match_func_int, 2},
     {"_Rmergetrees_match_func_vectorInt", (DL_FUNC) &_Rmergetrees_match_func_vectorInt, 2},
     {"_Rmergetrees_pruneSplits", (DL_FUNC) &_Rmergetrees_pruneSplits, 4},

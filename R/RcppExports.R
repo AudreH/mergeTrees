@@ -5,8 +5,8 @@ createMergeMatrix <- function(n, prune_res) {
     .Call('_Rmergetrees_createMergeMatrix', PACKAGE = 'Rmergetrees', n, prune_res)
 }
 
-hcToPath_cpp <- function(successives_steps, merge1, order1, n) {
-    .Call('_Rmergetrees_hcToPath_cpp', PACKAGE = 'Rmergetrees', successives_steps, merge1, order1, n)
+hcToPath_cpp <- function(merge1, match_order, n) {
+    .Call('_Rmergetrees_hcToPath_cpp', PACKAGE = 'Rmergetrees', merge1, match_order, n)
 }
 
 match_func_int <- function(x, y) {
