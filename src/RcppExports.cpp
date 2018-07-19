@@ -17,6 +17,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// export_order
+Rcpp::IntegerVector export_order(const IntegerMatrix& merge, const IntegerVector& size);
+RcppExport SEXP _Rmergetrees_export_order(SEXP mergeSEXP, SEXP sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type merge(mergeSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type size(sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(export_order(merge, size));
+    return rcpp_result_gen;
+END_RCPP
+}
+// export_merge
+Rcpp::IntegerMatrix export_merge(const IntegerVector& parent1, const IntegerVector& parent2);
+RcppExport SEXP _Rmergetrees_export_merge(SEXP parent1SEXP, SEXP parent2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type parent1(parent1SEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type parent2(parent2SEXP);
+    rcpp_result_gen = Rcpp::wrap(export_merge(parent1, parent2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // hcToPath_cpp
 List hcToPath_cpp(IntegerMatrix merge1, IntegerVector match_order, int n);
 RcppExport SEXP _Rmergetrees_hcToPath_cpp(SEXP merge1SEXP, SEXP match_orderSEXP, SEXP nSEXP) {
@@ -71,6 +95,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rmergetrees_createMergeMatrix", (DL_FUNC) &_Rmergetrees_createMergeMatrix, 2},
+    {"_Rmergetrees_export_order", (DL_FUNC) &_Rmergetrees_export_order, 2},
+    {"_Rmergetrees_export_merge", (DL_FUNC) &_Rmergetrees_export_merge, 2},
     {"_Rmergetrees_hcToPath_cpp", (DL_FUNC) &_Rmergetrees_hcToPath_cpp, 3},
     {"_Rmergetrees_match_func_int", (DL_FUNC) &_Rmergetrees_match_func_int, 2},
     {"_Rmergetrees_match_func_vectorInt", (DL_FUNC) &_Rmergetrees_match_func_vectorInt, 2},

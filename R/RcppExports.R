@@ -5,6 +5,15 @@ createMergeMatrix <- function(n, prune_res) {
     .Call('_Rmergetrees_createMergeMatrix', PACKAGE = 'Rmergetrees', n, prune_res)
 }
 
+#' @export
+export_order <- function(merge, size) {
+    .Call('_Rmergetrees_export_order', PACKAGE = 'Rmergetrees', merge, size)
+}
+
+export_merge <- function(parent1, parent2) {
+    .Call('_Rmergetrees_export_merge', PACKAGE = 'Rmergetrees', parent1, parent2)
+}
+
 hcToPath_cpp <- function(merge1, match_order, n) {
     .Call('_Rmergetrees_hcToPath_cpp', PACKAGE = 'Rmergetrees', merge1, match_order, n)
 }

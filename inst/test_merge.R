@@ -1,6 +1,5 @@
 # rm(list = ls())
-library(devtools)
-devtools::install_github("AudreH/Rmergetrees")
+# devtools::install_github("AudreH/Rmergetrees")
 # build()
 # install()
 library(Rmergetrees)
@@ -153,3 +152,12 @@ plot(apply(cutree(hc_1, k = 1:10), 2, NID, iris$Species), type = "l", ylim = c(0
 lines(apply(cutree(hc_2, k = 1:10), 2, NID, iris$Species), col = "blue")
 lines(apply(cutree(ape_consensus_p1, k = 1:10), 2, NID, iris$Species), col = "red")
 lines(apply(cutree(ape_consensus_p05, k = 1:10), 2, NID, iris$Species), col = "magenta")
+
+
+
+ape_consensus_p1 <- consensus(as.phylo(hc_1), as.phylo(hc_2), p = 1, check.labels = TRUE) # strict consensus
+ape_consensus_p1$edge.length <- rep(1, nrow(ape_consensus_p1$edge))
+lapply(1:6, function(h) phytools::treeSlice(as.phylo(as.dendrogram.phylo(ape_consensus_p1)), slice = h))
+
+
+plot(phytools::force.ultrametric(ape_consensus_p1))
