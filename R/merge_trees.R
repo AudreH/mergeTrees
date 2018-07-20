@@ -51,10 +51,17 @@ mergeTrees = function(hc.list, standardize = FALSE){
 
     hc.list = lapply(1:length(hc.list), FUN = function(x){
       if(labels.equal[[x]] == FALSE){
-        hc.list[[x]]$labels = hc.list[[x]]$labels[order(match(hc.list[[x]]$labels, hc.list[[1]]$labels))]
-        hc.list[[x]]$order = hc.list[[x]]$order[order(match(hc.list[[x]]$labels, hc.list[[1]]$order))]
-      }else{
-      }
+        # hc.list[[x]]$labels = hc.list[[x]]$labels[order(match(hc.list[[x]]$labels, hc.list[[1]]$labels))]
+        # hc.list[[x]]$order = hc.list[[x]]$order[order(match(hc.list[[x]]$labels, hc.list[[1]]$order))]
+
+        # 19/07/18 : Issue 1 : Julien's comment order(match(vec1, vec_2)) = match(vec_2, vec_1)
+        # + issue with the match(hc.list[[1]]$order, hc.list[[x]]$labels)
+
+        new_order = match(hc.list[[1]]$labels, hc.list[[x]]$labels)
+        hc.list[[x]]$labels = hc.list[[x]]$labels[new_order]
+        # hc.list[[x]]$order = hc.list[[x]]$order[new_order]
+        hc.list[[x]]$order = new_order
+      }else{}
       return(hc.list[[x]])
     })
   }
