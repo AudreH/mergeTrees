@@ -115,15 +115,31 @@ List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p) {
 
   // END CORE //
 
-  List out;
-  out["groupsParent"]        = groupsParent;
-  out["groupsIRule"]         = groupsIndexRules;
-  out["groupsNbIndividuals"] =  groupsNbIndividuals;
-  out["groupsNbCalled"]      = groupsNbCalled;
-  out["groupsChildCurrent"]  = groupsChildCurrent;
-  out["groupsToVisit"]       = groupsToVisit;
-  out["groupsToSplit"]       = groupsToSplit;
-  out["currentGroup"]        = currentGroup;
+  // finding group order
+  IntegerVector sorted = clone(currentGroup).sort();
+
+  Rcpp::DataFrame out = DataFrame::create(
+    Rcpp::Named("element")  = match(sorted, currentGroup),
+    Rcpp::Named("actif"  )  = seq_len(currentGroup.size()) - 1,
+    Rcpp::Named("up"     )  = groupsParent,
+    Rcpp::Named("down"   )  = groupsChildCurrent,
+    Rcpp::Named("rule"   )  = groupsIndexRules + 1,
+    Rcpp::Named("groupsParent"   )  = groupsParent,
+    Rcpp::Named("groupsChildCurrent"   )  = groupsChildCurrent,
+    Rcpp::Named("groupsIRule"   )  = groupsIndexRules,
+    Rcpp::Named("currentGroup"   )  = currentGroup
+  );
+
+  //
+  // List out;
+  // out["groupsParent"]        = groupsParent;
+  // out["groupsIRule"]         = groupsIndexRules;
+  // out["groupsNbIndividuals"] =  groupsNbIndividuals;
+  // out["groupsNbCalled"]      = groupsNbCalled;
+  // out["groupsChildCurrent"]  = groupsChildCurrent;
+  // out["groupsToVisit"]       = groupsToVisit;
+  // out["groupsToSplit"]       = groupsToSplit;
+  // out["currentGroup"]        = currentGroup;
   return(out);
 }
 

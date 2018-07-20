@@ -1,8 +1,12 @@
 # rm(list = ls())
+<<<<<<< HEAD
 library(devtools)
 devtools::install_github("AudreH/Rmergetrees")
 # use_rcpp()
 # document()
+=======
+# devtools::install_github("AudreH/Rmergetrees")
+>>>>>>> 146e485936c8aa40fe9d4fc30f917dc095d67656
 # build()
 # install()
 library(Rmergetrees)
@@ -233,6 +237,7 @@ lines(apply(cutree(ape_consensus_p05, k = 1:10), 2, NID, iris$Species), col = "m
 
 
 
+<<<<<<< HEAD
 # ---- Test timing / limites fonction d'agregation : ----
 
 # nb_ind  = 1000
@@ -315,3 +320,11 @@ par(mfrow = c(1,3))
 plot(h1, ylim = c(0, max(h1$height, h2$height)))
 plot(h2, ylim = c(0, max(h1$height, h2$height)))
 plot(mergedTree_noStd)
+=======
+ape_consensus_p1 <- consensus(as.phylo(hc_1), as.phylo(hc_2), p = 1, check.labels = TRUE) # strict consensus
+ape_consensus_p1$edge.length <- rep(1, nrow(ape_consensus_p1$edge))
+lapply(1:6, function(h) phytools::treeSlice(as.phylo(as.dendrogram.phylo(ape_consensus_p1)), slice = h))
+
+
+plot(phytools::force.ultrametric(ape_consensus_p1))
+>>>>>>> 146e485936c8aa40fe9d4fc30f917dc095d67656
