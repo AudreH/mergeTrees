@@ -1,15 +1,11 @@
----
-title: "Rmergetrees: a pacage for fastly merging tree-like object"
-output: github_document
----
+Rmergetrees
+================
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+A package for fastly merging tree-like objects.
 
-## Install
+Install
+-------
 
-```{r install, eval=FALSE}
+``` r
 devtools::install_github("AudreH/Rmergetrees")
 ```
-
