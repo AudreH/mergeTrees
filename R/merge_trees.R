@@ -42,29 +42,7 @@ mergeTrees = function(hc.list, standardize = FALSE){
 
   # In case the trees have different labels: no merging possible (we do'nt know the corresponding labels between the trees)
   # TO DO : add a break here in case all the labels are not identical to those from the first tree.
-
-  labels_list = lapply(hc.list, FUN = function(x){return(x$labels)})
-
-  # reference: les labels/order of the first tree in the list
-  if(!is.null(labels_list[[1]])){
-    labels.equal = lapply(labels_list, FUN = function(x) identical(x, labels_list[[1]]))
-
-    hc.list = lapply(1:length(hc.list), FUN = function(x){
-      if(labels.equal[[x]] == FALSE){
-        # hc.list[[x]]$labels = hc.list[[x]]$labels[order(match(hc.list[[x]]$labels, hc.list[[1]]$labels))]
-        # hc.list[[x]]$order = hc.list[[x]]$order[order(match(hc.list[[x]]$labels, hc.list[[1]]$order))]
-
-        # 19/07/18 : Issue 1 : Julien's comment order(match(vec1, vec_2)) = match(vec_2, vec_1)
-        # + issue with the match(hc.list[[1]]$order, hc.list[[x]]$labels)
-
-        new_order = match(hc.list[[1]]$labels, hc.list[[x]]$labels)
-        hc.list[[x]]$labels = hc.list[[x]]$labels[new_order]
-        # hc.list[[x]]$order = hc.list[[x]]$order[new_order]
-        hc.list[[x]]$order = new_order
-      }else{}
-      return(hc.list[[x]])
-    })
-  }
+  hc.list <- reorder_hc_list(hc.list)
 
   #############################################
   # ----- Reconstitution paths : -------------
