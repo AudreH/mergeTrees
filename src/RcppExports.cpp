@@ -29,6 +29,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getMergeMatrix
+Rcpp::List getMergeMatrix(IntegerVector group, IntegerVector parent, IntegerVector order);
+RcppExport SEXP _Rmergetrees_getMergeMatrix(SEXP groupSEXP, SEXP parentSEXP, SEXP orderSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type group(groupSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type parent(parentSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type order(orderSEXP);
+    rcpp_result_gen = Rcpp::wrap(getMergeMatrix(group, parent, order));
+    return rcpp_result_gen;
+END_RCPP
+}
 // export_order
 Rcpp::IntegerVector export_order(const IntegerMatrix& merge, const IntegerVector& size);
 RcppExport SEXP _Rmergetrees_export_order(SEXP mergeSEXP, SEXP sizeSEXP) {
@@ -108,6 +121,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_Rmergetrees_as_fusionTree", (DL_FUNC) &_Rmergetrees_as_fusionTree, 2},
     {"_Rmergetrees_createMergeMatrix", (DL_FUNC) &_Rmergetrees_createMergeMatrix, 2},
+    {"_Rmergetrees_getMergeMatrix", (DL_FUNC) &_Rmergetrees_getMergeMatrix, 3},
     {"_Rmergetrees_export_order", (DL_FUNC) &_Rmergetrees_export_order, 2},
     {"_Rmergetrees_export_merge", (DL_FUNC) &_Rmergetrees_export_merge, 2},
     {"_Rmergetrees_hcToPath_cpp", (DL_FUNC) &_Rmergetrees_hcToPath_cpp, 3},

@@ -9,6 +9,10 @@ createMergeMatrix <- function(n, prune_res) {
     .Call('_Rmergetrees_createMergeMatrix', PACKAGE = 'Rmergetrees', n, prune_res)
 }
 
+getMergeMatrix <- function(group, parent, order) {
+    .Call('_Rmergetrees_getMergeMatrix', PACKAGE = 'Rmergetrees', group, parent, order)
+}
+
 #' @export
 export_order <- function(merge, size) {
     .Call('_Rmergetrees_export_order', PACKAGE = 'Rmergetrees', merge, size)

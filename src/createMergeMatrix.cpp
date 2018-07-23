@@ -63,13 +63,39 @@ IntegerMatrix createMergeMatrix(int n,
   return(mergeMatrix);
 }
 
-/*** R
-## Test for the function
-# load("/home/hulot/Documents/packages_R/Rmergetrees/prune_res.RData")
-# mergeMatrix = createMergeMatrix(ncol(matrice_aide2), matrice_aide2)
-# mergeMatrix[1:10,]
-# test = match_func_vectorInt(17, matrice_aide2[3,]) # Nombre d'enfants engendres par 17
-# test
-# test2 = match_func_vectorInt(17, matrice_aide2[2,]) # Logiquement un seul : nombre d'element dans le groupe 17
-# test2
-*/
+// [[Rcpp::export]]
+Rcpp::List getMergeMatrix(IntegerVector group,
+                              IntegerVector parent,
+                              IntegerVector order) {
+
+  // Initialization
+  int n = order.size() ;
+  IntegerMatrix merge(n - 1, 2);
+
+  IntegerVector vanishing = order;
+  IntegerVector tmp = parent[order] ;
+  IntegerVector aggregating = order[(n-1) - tmp] ;
+  IntegerVector label (n) ;
+  for (int i = 0; i < n ; i++) {label[i] = i;}
+
+  IntegerVector node_size(n - 1) ;
+  IntegerVector group_size(n, 1) ;
+
+  for (int i = 0; i < (n - 1) ; i++) {
+
+    merge(i, 0) = label[vanishing[i]] ;
+    merge(i, 1) = label[aggregating[i]] ;
+
+    label[aggregating[i]] = i + n ;
+
+    group_size[aggregating[i]] += group_size[vanishing[i]] ;
+    node_size[i] = group_size[aggregating[i]] ;
+
+  }
+
+  return Rcpp::List::create(
+    Rcpp::Named("merge") = merge + 1,
+    Rcpp::Named("node_size") = node_size
+  );
+}
+
