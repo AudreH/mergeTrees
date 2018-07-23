@@ -2,8 +2,6 @@
 
 export(as.fusionTree)
 export(as_fusionTree)
-export(export_order)
-export(hcToPath)
 export(mergeTrees)
 importFrom(Rcpp,sourceCpp)
 useDynLib(Rmergetrees)

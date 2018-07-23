@@ -6,36 +6,15 @@ as_fusionTree <- function(merge, order) {
     .Call('_Rmergetrees_as_fusionTree', PACKAGE = 'Rmergetrees', merge, order)
 }
 
-createMergeMatrix <- function(n, prune_res) {
-    .Call('_Rmergetrees_createMergeMatrix', PACKAGE = 'Rmergetrees', n, prune_res)
+export_order <- function(merge, size) {
+    .Call('_Rmergetrees_export_order', PACKAGE = 'Rmergetrees', merge, size)
 }
 
 getMergeMatrix <- function(group, parent, order) {
     .Call('_Rmergetrees_getMergeMatrix', PACKAGE = 'Rmergetrees', group, parent, order)
 }
 
-#' @export
-export_order <- function(merge, size) {
-    .Call('_Rmergetrees_export_order', PACKAGE = 'Rmergetrees', merge, size)
-}
-
-export_merge <- function(parent1, parent2) {
-    .Call('_Rmergetrees_export_merge', PACKAGE = 'Rmergetrees', parent1, parent2)
-}
-
-hcToPath_cpp <- function(merge1, match_order, n) {
-    .Call('_Rmergetrees_hcToPath_cpp', PACKAGE = 'Rmergetrees', merge1, match_order, n)
-}
-
-match_func_int <- function(x, y) {
-    .Call('_Rmergetrees_match_func_int', PACKAGE = 'Rmergetrees', x, y)
-}
-
-match_func_vectorInt <- function(x, y) {
-    .Call('_Rmergetrees_match_func_vectorInt', PACKAGE = 'Rmergetrees', x, y)
-}
-
-pruneSplits <- function(listSetRules, orderRules, n, p) {
-    .Call('_Rmergetrees_pruneSplits', PACKAGE = 'Rmergetrees', listSetRules, orderRules, n, p)
+pruneSplits <- function(listSetRules, orderRules, n) {
+    .Call('_Rmergetrees_pruneSplits', PACKAGE = 'Rmergetrees', listSetRules, orderRules, n)
 }
 
