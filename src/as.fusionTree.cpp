@@ -18,8 +18,9 @@ IntegerVector get_fusion_desc(int child,
     return fusion_desc ;
 }
 
+//' @export
 // [[Rcpp::export]]
-Rcpp::IntegerMatrix as_fusionTree(
+Rcpp::IntegerMatrix as_fusionTree (
     IntegerMatrix merge,
     IntegerVector order) {
 
@@ -56,9 +57,9 @@ Rcpp::IntegerMatrix as_fusionTree(
 
 }
 
-
-/*** R
-library(Rmergetrees)
-hc_1 <- hclust(dist(USArrests[1:5, 1:2]), method = "ward.D2")
-as_fusionTree(hc_1$merge, hc_1$order)
-*/
+//
+// /*** R
+// library(Rmergetrees)
+// hc_1 <- hclust(dist(USArrests[1:5, 1:2]), method = "ward.D2")
+// as_fusionTree(hc_1$merge, hc_1$order)
+// */
