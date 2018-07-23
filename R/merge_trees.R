@@ -5,22 +5,6 @@
 #' @export
 mergeTrees = function(hc.list, standardize = FALSE){
 
-  # REMOVE THIS : THIS IS FOR TESTING ONLY
-  # library(Rcpp)
-  # sourceCpp("src/hcToPath.cpp")
-  # sourceCpp("src/prune_splits.cpp")
-  # sourceCpp("src/createMergeMatrix.cpp")
-  # source("R/agregation_to_hc.R")
-  # source("R/generate_splits.R")
-  # source("R/hcToPath.R")
-  #
-  # hc_1 <- hclust(dist(iris[, 1:4], "euclidean"), method = "ward.D2")
-  # hc_2 <- hclust(dist(iris[, 1:4], "euclidean"), method = "complete")
-  #
-  # hc.list = list(hc_1, hc_2)
-  ###
-
-
   n = length(hc.list[[1]]$order) # tous les arbres doivent avoir le meme nombre d'element.
   p = length(hc.list)
 
@@ -42,22 +26,14 @@ mergeTrees = function(hc.list, standardize = FALSE){
 
   # In case the trees have different labels: no merging possible (we do'nt know the corresponding labels between the trees)
   # TO DO : add a break here in case all the labels are not identical to those from the first tree.
-  # hc.list <- lapply(hc.list, reorder_hc)
+
+  hc.list <- lapply(hc.list, reorder_hc)
 
   #############################################
   # ----- Reconstitution paths : -------------
   #############################################
 
-  # DataSets = lapply(hc.list, FUN = function(hc.object) return(hcToPath(hc.object, n = n)))
-
-
   lSetRules <- lapply(hc.list, as.fusionTree)
-
-  # lSetRules  <- lapply(DataSets, function(path.hc)
-  #   list(rules = path.hc$path,
-  #   lambda.rules = path.hc$path[,4],
-  #   order = path.hc$order)
-  # )
 
   oRules <- orderRules(lSetRules)
 
@@ -66,53 +42,51 @@ mergeTrees = function(hc.list, standardize = FALSE){
   index_rules = out_aggregation$groupsIRule[-1] + 1
 
   dimrule <- oRules[index_rules, 2]
-  lambdaRules = unlist(lapply(1:length(dimrule), FUN = function(x){lSetRules[[oRules[index_rules[x],2]]]$height[oRules[index_rules[x],1]]}))
+  lambdaRules <- unlist(lapply(1:length(dimrule), FUN = function(x){lSetRules[[oRules[index_rules[x],2]]]$height[oRules[index_rules[x],1]]}))
 
   #############################################
   # ----- Reconstitution hclust : ------------
   #############################################
 
-  mat_element = rbind(1:n, out_aggregation$currentGroup)
-
-  # Matrix Children and parents:
-  mat_groupes = rbind(1:n, out_aggregation$groupsParent, out_aggregation$groupsChildCurrent, out_aggregation$groupsIRule)
-
-  # Reorder : correspondence between matrix of groups and matrix of elements.
-  mat_element2 = mat_element[,order(mat_element[2,])]
-
-  mat_aide = rbind(mat_element2, mat_groupes)
-  mat_aide2 = mat_aide[-3,]
-
-  l_element = 1 ; l_groupeAct = 2; l_parent = 3 ; l_enfant = 4 ;
-    # Those who fathered 0 don't have any children
-  mat_aide_save = mat_aide2
-  mat_aide2[l_enfant, which(mat_aide2[l_enfant,]==0)] <- 3*n # IntegerMatrixNeeded
-  mat_aide3 = mat_aide2[,order(mat_aide2[l_groupeAct,], decreasing = TRUE)]
-  matrice_aide2 = mat_aide3[-5,]
-
-  # save(matrice_aide2, file = "prune_res.RData")
+  # mat_element = rbind(1:n, out_aggregation$currentGroup)
+  #
+  # # Matrix Children and parents:
+  # mat_groupes = rbind(1:n, out_aggregation$groupsParent, out_aggregation$groupsChildCurrent, out_aggregation$groupsIRule)
+  #
+  # # Reorder : correspondence between matrix of groups and matrix of elements.
+  # mat_element2 = mat_element[,order(mat_element[2,])]
+  #
+  # mat_aide = rbind(mat_element2, mat_groupes)
+  # mat_aide2 = mat_aide[-3,]
+  #
+  # l_element = 1 ; l_groupeAct = 2; l_parent = 3 ; l_enfant = 4 ;
+  # # Those who fathered 0 don't have any children
+  # mat_aide_save = mat_aide2
+  # mat_aide2[l_enfant, which(mat_aide2[l_enfant,]==0)] <- 3*n # IntegerMatrixNeeded
+  # mat_aide3 = mat_aide2[,order(mat_aide2[l_groupeAct,], decreasing = TRUE)]
+  # matrice_aide2 = mat_aide3[-5,]
 
   # Matrice Merge :
-  mergeMatrix = createMergeMatrix(n, matrice_aide2)
+  ## mergeMatrix = createMergeMatrix(n, matrice_aide2)
 
   merging <- getMergeMatrix(
     out_aggregation$group,
-    out_aggregation$parent,
+    out_aggregation$parent[out_aggregation$currentGroup + 1],
     order(out_aggregation$currentGroup, decreasing = TRUE) - 1)
 
-  # mergeMatrix <- merging$merge
+  mergeMatrix <- merging$merge
 
   mergeMatrix[mergeMatrix<=n] <- -mergeMatrix[mergeMatrix<=n] # number starts at 1 in R, 0 in Cpp
   mergeMatrix[mergeMatrix>n] <- mergeMatrix[mergeMatrix>n]-n
 
    # Ordre :
-  mat_aide2 = mat_aide_save
-  mat_aide2[l_enfant, which(mat_aide2[l_enfant,]==0)] <- NA
-  mat_aide3 = mat_aide2[,order(mat_aide2[l_groupeAct,], decreasing = TRUE)]
-  matrice_aide2 = mat_aide3[-5,]
-  Order = OrdreIndividus(matrice_aide2)
+  # mat_aide2 = mat_aide_save
+  # mat_aide2[l_enfant, which(mat_aide2[l_enfant,]==0)] <- NA
+  # mat_aide3 = mat_aide2[,order(mat_aide2[l_groupeAct,], decreasing = TRUE)]
+  # matrice_aide2 = mat_aide3[-5,]
+  # Order = OrdreIndividus(matrice_aide2)
 
-##  Order <- export_order(mergeMatrix, merging$node_size)
+  Order <- export_order(mergeMatrix, merging$node_size)
 
   # Height :
   # dans le cas ou les individus sont degroupes artificiellement, completer les hauteurs de coupures.
