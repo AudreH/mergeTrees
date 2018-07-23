@@ -5,6 +5,18 @@
 
 using namespace Rcpp;
 
+// as_fusionTree
+Rcpp::IntegerMatrix as_fusionTree(IntegerMatrix merge, IntegerVector order);
+RcppExport SEXP _Rmergetrees_as_fusionTree(SEXP mergeSEXP, SEXP orderSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type merge(mergeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type order(orderSEXP);
+    rcpp_result_gen = Rcpp::wrap(as_fusionTree(merge, order));
+    return rcpp_result_gen;
+END_RCPP
+}
 // createMergeMatrix
 IntegerMatrix createMergeMatrix(int n, IntegerMatrix prune_res);
 RcppExport SEXP _Rmergetrees_createMergeMatrix(SEXP nSEXP, SEXP prune_resSEXP) {
@@ -94,6 +106,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_Rmergetrees_as_fusionTree", (DL_FUNC) &_Rmergetrees_as_fusionTree, 2},
     {"_Rmergetrees_createMergeMatrix", (DL_FUNC) &_Rmergetrees_createMergeMatrix, 2},
     {"_Rmergetrees_export_order", (DL_FUNC) &_Rmergetrees_export_order, 2},
     {"_Rmergetrees_export_merge", (DL_FUNC) &_Rmergetrees_export_merge, 2},

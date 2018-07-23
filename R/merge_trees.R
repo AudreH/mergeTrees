@@ -48,24 +48,29 @@ mergeTrees = function(hc.list, standardize = FALSE){
   # ----- Reconstitution paths : -------------
   #############################################
 
-  DataSets = lapply(hc.list, FUN = function(hc.object) return(hcToPath(hc.object, n = n)))
+  # DataSets = lapply(hc.list, FUN = function(hc.object) return(hcToPath(hc.object, n = n)))
 
-  lSetRules  <- lapply(DataSets, function(path.hc) list(rules = path.hc$path,
-                                                        lambda.rules = path.hc$path[,4],
-                                                        order = path.hc$order))
+
+  lSetRules <- lapply(hc.list, as.fusionTree)
+
+  # lSetRules  <- lapply(DataSets, function(path.hc)
+  #   list(rules = path.hc$path,
+  #   lambda.rules = path.hc$path[,4],
+  #   order = path.hc$order)
+  # )
+
   oRules <- orderRules(lSetRules)
+
   out_agregation <- pruneSplits(listSetRules = lSetRules, orderRules = as.matrix(oRules), n, p)
 
-  index_rules = out_agregation$groupsIRule[-1]+1
+  index_rules = out_agregation$groupsIRule[-1] + 1
 
   dimrule <- oRules[index_rules, 2]
-  lambdaRules = unlist(lapply(1:length(dimrule), FUN = function(x){lSetRules[[oRules[index_rules[x],2]]]$lambda.rules[oRules[index_rules[x],1]]}))
-
+  lambdaRules = unlist(lapply(1:length(dimrule), FUN = function(x){lSetRules[[oRules[index_rules[x],2]]]$height[oRules[index_rules[x],1]]}))
 
   #############################################
   # ----- Reconstitution hclust : ------------
   #############################################
-
 
   mat_element = rbind(1:n, out_agregation$currentGroup)
 
@@ -85,6 +90,8 @@ mergeTrees = function(hc.list, standardize = FALSE){
   mat_aide2[l_enfant, which(mat_aide2[l_enfant,]==0)] <- 3*n # IntegerMatrixNeeded
   mat_aide3 = mat_aide2[,order(mat_aide2[l_groupeAct,], decreasing = TRUE)]
   matrice_aide2 = mat_aide3[-5,]
+
+
   # save(matrice_aide2, file = "prune_res.RData")
 
   # Matrice Merge :

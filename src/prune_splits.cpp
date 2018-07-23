@@ -40,7 +40,7 @@ List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p) {
 
     List setRules = listSetRules[p-1];
     IntegerVector order_current = setRules["order"];
-    IntegerMatrix rules_current = setRules["rules"];
+    IntegerMatrix rules_current = setRules["path"];
 
     // order in R -1 to get order in Cpp
     int j_low   = rules_current(index-1, 0);
@@ -119,7 +119,7 @@ List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p) {
   IntegerVector sorted = clone(currentGroup).sort();
 
   Rcpp::DataFrame out = DataFrame::create(
-    Rcpp::Named("element")  = match(sorted, currentGroup),
+    Rcpp::Named("group_order") = match(sorted, currentGroup),
     Rcpp::Named("actif"  )  = seq_len(currentGroup.size()) - 1,
     Rcpp::Named("up"     )  = groupsParent,
     Rcpp::Named("down"   )  = groupsChildCurrent,

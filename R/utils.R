@@ -17,3 +17,13 @@ reorder_hc_list <- function(hc_list) {
   }
   hc_list
 }
+
+##' @export
+as.fusionTree <- function(hc_obj) {
+
+  fusionTree <- as_fusionTree(hc_obj$merge, hc_obj$order)
+  res <- list(path   = fusionTree[nrow(fusionTree):1,],
+              height = hc_obj$height,
+              order  = hc_obj$order)
+  res
+}
