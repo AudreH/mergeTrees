@@ -211,9 +211,9 @@ List hcToPath_cpp(IntegerMatrix merge1,
   } // End while
 
   List out;
-  out["minvector"] = minVector;
-  out["splitVector"] = splitVector;
-  out["maxVector"] = maxVector;
+  out["index_down"] = minVector;
+  out["index_split"] = splitVector;
+  out["index_up"] = maxVector;
   return(out);
 }
 
