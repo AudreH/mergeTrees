@@ -1,6 +1,6 @@
 # rm(list = ls())
-library(devtools)
-devtools::install_github("AudreH/Rmergetrees")
+# library(devtools)
+# devtools::install_github("AudreH/Rmergetrees")
 # build()
 # install()
 library(Rmergetrees)

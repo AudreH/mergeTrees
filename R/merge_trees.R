@@ -24,9 +24,11 @@ mergeTrees = function(hc.list, standardize = FALSE){
   #############################################
 
   # In case the trees have different labels, no merging possible
-  labels <- Reduce(intersect, lapply(list(hc_1, hc_2), function(hc) hc$labels))
-  stopifnot(length(labels) == n)
-  hc.list <- lapply(hc.list, reorder_hc)
+  labels <- Reduce(intersect, lapply(hc.list, function(hc) hc$labels))
+  if (!is.null(labels)) {
+    stopifnot(length(labels) == n)
+    hc.list <- lapply(hc.list, reorder_hc)
+  }
 
   #############################################
   # ----- Reconstitution paths : -------------
