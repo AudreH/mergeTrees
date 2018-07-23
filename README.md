@@ -1,15 +1,13 @@
----
-output: rmerge_trees
----
+Rmergetrees
+================
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+A package for fastly merging tree-like objects.
 
-```{r, echo = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "README-"
-)
+Install
+-------
+
+``` r
+devtools::install_github("AudreH/Rmergetrees")
 ```
 
 ```{r, echo = TRUE}
