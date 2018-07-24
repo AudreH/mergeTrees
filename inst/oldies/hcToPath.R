@@ -1,3 +1,4 @@
+#' @export
 hcToPath = function(hc.object, n = length(hc.object$order)){
   # hc.object = hc_1
   merge1 = hc.object$merge

@@ -1,11 +1,10 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-
-
 // [[Rcpp::export]]
-List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p) {
+List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n) {
 
+  int p = listSetRules.length() ;
   IntegerVector groups(n, 3);
   // INITIALIZATION //
   // for groups
@@ -40,7 +39,7 @@ List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p) {
 
     List setRules = listSetRules[p-1];
     IntegerVector order_current = setRules["order"];
-    IntegerMatrix rules_current = setRules["rules"];
+    IntegerMatrix rules_current = setRules["path"];
 
     // order in R -1 to get order in Cpp
     int j_low   = rules_current(index-1, 0);
@@ -118,28 +117,11 @@ List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n, int p) {
   // finding group order
   IntegerVector sorted = clone(currentGroup).sort();
 
-  Rcpp::DataFrame out = DataFrame::create(
-    Rcpp::Named("element")  = match(sorted, currentGroup),
-    Rcpp::Named("actif"  )  = seq_len(currentGroup.size()) - 1,
-    Rcpp::Named("up"     )  = groupsParent,
-    Rcpp::Named("down"   )  = groupsChildCurrent,
-    Rcpp::Named("rule"   )  = groupsIndexRules + 1,
-    Rcpp::Named("groupsParent"   )  = groupsParent,
-    Rcpp::Named("groupsChildCurrent"   )  = groupsChildCurrent,
-    Rcpp::Named("groupsIRule"   )  = groupsIndexRules,
-    Rcpp::Named("currentGroup"   )  = currentGroup
+  return List::create(
+    Rcpp::Named("parent")      = groupsParent[currentGroup],
+    Rcpp::Named("group")       = currentGroup,
+    Rcpp::Named("index_rule" ) = groupsIndexRules + 1
   );
 
-  //
-  // List out;
-  // out["groupsParent"]        = groupsParent;
-  // out["groupsIRule"]         = groupsIndexRules;
-  // out["groupsNbIndividuals"] =  groupsNbIndividuals;
-  // out["groupsNbCalled"]      = groupsNbCalled;
-  // out["groupsChildCurrent"]  = groupsChildCurrent;
-  // out["groupsToVisit"]       = groupsToVisit;
-  // out["groupsToSplit"]       = groupsToSplit;
-  // out["currentGroup"]        = currentGroup;
-  return(out);
 }
 

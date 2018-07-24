@@ -9,7 +9,6 @@ struct pos_node {
   int_fast32_t node;
 };
 
-//' @export
 // [[Rcpp::export]]
 Rcpp::IntegerVector export_order(const IntegerMatrix& merge, const IntegerVector& size) {
   // function to recover a correct order of the nodes for the dendrogram (required for hclust object)
@@ -67,34 +66,38 @@ Rcpp::IntegerVector export_order(const IntegerMatrix& merge, const IntegerVector
 };
 
 // [[Rcpp::export]]
-Rcpp::IntegerMatrix export_merge(const IntegerVector& parent1, const IntegerVector& parent2) {
+Rcpp::List getMergeMatrix(IntegerVector group,
+                              IntegerVector parent,
+                              IntegerVector order) {
 
-  // function to ouput the dendrogram of fusion into the hclust format
-  int K = parent1.size() + 1 ;
-  IntegerMatrix merge = IntegerMatrix(K - 1, 2);
+  // Initialization
+  int n = order.size() ;
+  IntegerMatrix merge(n - 1, 2);
 
-  for (int k = 0; k < K - 1; k++) {
+  IntegerVector vanishing = order;
+  IntegerVector tmp = parent[order] ;
+  IntegerVector aggregating = order[(n-1) - tmp] ;
+  IntegerVector label (n) ;
+  for (int i = 0; i < n ; i++) {label[i] = i;}
 
-    int_fast32_t merge1, merge2;
+  IntegerVector node_size(n - 1) ;
+  IntegerVector group_size(n, 1) ;
 
-    if (parent1[k] > K) {
-      merge1 = parent1[k] - K;
-    } else {
-      merge1 = -parent1[k];
-    }
-    if (parent2[k] > K) {
-      merge2 = parent2[k] - K;
-    } else {
-      merge2 = -parent2[k];
-    }
-    if (merge1 < merge2) {
-      merge(k, 0) = merge1;
-      merge(k, 1) = merge2;
-    }
-    else {
-      merge(k, 0) = merge2;
-      merge(k, 1) = merge1;
-    }
+  for (int i = 0; i < (n - 1) ; i++) {
+
+    merge(i, 0) = label[vanishing[i]] ;
+    merge(i, 1) = label[aggregating[i]] ;
+
+    label[aggregating[i]] = i + n ;
+
+    group_size[aggregating[i]] += group_size[vanishing[i]] ;
+    node_size[i] = group_size[aggregating[i]] ;
+
   }
-  return(merge) ;
-};
+
+  return Rcpp::List::create(
+    Rcpp::Named("merge") = merge + 1,
+    Rcpp::Named("node_size") = node_size
+  );
+}
+
