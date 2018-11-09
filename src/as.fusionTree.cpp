@@ -18,7 +18,6 @@ IntegerVector get_fusion_desc(int child,
     return fusion_desc ;
 }
 
-//' @export
 // [[Rcpp::export]]
 Rcpp::IntegerMatrix as_fusionTree (
     IntegerMatrix merge,
