@@ -7,10 +7,24 @@
 mergeTrees(hc.list, standardize = FALSE)
 }
 \arguments{
-\item{hc.list}{a list with a least one hclust object to be merge in a single consensus tree}
+\item{hc.list}{a list with at least one hclust object to be merge in a single consensus tree. No other tree format is supported.}
 
-\item{standardize}{a boolean indicating wether the heights of the different trees should be normalized before merged}
+\item{standardize}{a boolean indicating wether the heights of the different trees should be normalized before merged. Normalization is done by divinding the heights of fusion by their maximum in each tree.}
+}
+\value{
+A list of class hclust, being the consensus tree, with the following components: height, merge, method, order, and, if any, labels. For more information about these components, please see hclust function help page.
 }
 \description{
-Merge a set of hclust objet into a single tree
+The consensus tree is built in a divisive way. Trees from hc.list argument are transformed into a list of possible splits. Each split is characterized by its heights in the tree and
+the two clusters it is creating. If the trees are non-binary trees (i.e. create more than two clusters in one split, or equivalently, if they merge more than two clusters), the method creates as many splits as
+there are clusters created.
+All the splits from the trees are then ordered by decreasing height. The method follow the list to find the active splits, and create a consensus tree.
+The method can be summarized with this property: "At height h, if elements i and j are groupes in the same clusters in all the trees, then they are in the same cluster in the consensus tree", or, equivalently:
+"At height h, if elements i and j are not in the same clusters in at least one of the trees, then they are not in the same cluster in the consensus tree".
+}
+\seealso{
+\link[stats]{hclust}
+}
+\author{
+Audrey Hulot, \email{audrey.hulot@inra.fr}, Julien Chiquet, Guillem Rigaill
 }

@@ -9,6 +9,9 @@ as.fusionTree(hc_obj)
 \arguments{
 \item{hc_obj}{and hclust object}
 }
+\value{
+a list woth three element: path of fusion, vector of height, ordering.
+}
 \description{
 Turn an hclust object into an
 }
