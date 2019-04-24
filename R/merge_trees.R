@@ -1,7 +1,16 @@
 #' Merge a set of hclust objet into a single tree
 #'
-#' @param hc.list a list with a least one hclust object to be merge in a single consensus tree
-#' @param standardize a boolean indicating wether the heights of the different trees should be normalized before merged
+#' The consensus tree is built in a divisive way. Trees from hc.list argument are transformed into a list of possible splits. Each split is characterized by its heights in the tree and
+#' the two clusters it is creating. If the trees are non-binary trees (i.e. create more than two clusters in one split, or equivalently, if they merge more than two clusters), the method creates as many splits as
+#' there are clusters created.
+#' All the splits from the trees are then ordered by decreasing height. The method follow the list to find the active splits, and create a consensus tree.
+#' The method can be summarized with this property: "At height h, if elements i and j are groupes in the same clusters in all the trees, then they are in the same cluster in the consensus tree", or, equivalently:
+#' "At height h, if elements i and j are not in the same clusters in at least one of the trees, then they are not in the same cluster in the consensus tree".
+#' @param hc.list a list with at least one hclust object to be merge in a single consensus tree. No other tree format is supported.
+#' @param standardize a boolean indicating wether the heights of the different trees should be normalized before merged. Normalization is done by divinding the heights of fusion by their maximum in each tree.
+#' @return A list of class hclust, being the consensus tree, with the following components: height, merge, method, order, and, if any, labels. For more information about these components, please see hclust function help page.
+#' @seealso \link[stats]{hclust}
+#' @author Audrey Hulot, \email{audrey.hulot@@inra.fr}, Julien Chiquet, Guillem Rigaill
 #' @export
 mergeTrees = function(hc.list, standardize = FALSE){
 
@@ -13,9 +22,11 @@ mergeTrees = function(hc.list, standardize = FALSE){
   # ----- Standardization : -------------------
   #############################################
   # fix tree comparisons issues.
-  if (standardize) {
-    lapply(hc.list, function(hc){
-      hc$height <<- hc$height/max(hc$height) # tous compris entre 0 et 1
+  if (standardize) { # each tree is standardized so the heights are all between 0 and 1
+    hc.list <- lapply(hc.list, function(hc){
+      # hc$height <<- hc$height/max(hc$height)  # 23/04/19 Probleme avec cette ligne
+      hc$height <- hc$height/max(hc$height)
+      hc
     })
   }
 
@@ -24,11 +35,11 @@ mergeTrees = function(hc.list, standardize = FALSE){
   #############################################
 
   # In case the trees have different labels, no merging possible
-  labels <- Reduce(intersect, lapply(hc.list, function(hc) hc$labels))
-  if (!is.null(labels)) {
-    stopifnot(length(labels) == n)
-    hc.list <- lapply(hc.list, reorder_hc)
-  }
+  # labels <- Reduce(intersect, lapply(hc.list, function(hc) hc$labels))
+  # if (!is.null(labels)) {
+  #   stopifnot(length(labels) == n)
+  #   hc.list <- lapply(hc.list, reorder_hc)
+  # }
 
   #############################################
   # ----- Reconstitution paths : -------------
