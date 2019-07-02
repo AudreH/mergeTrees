@@ -1,7 +1,7 @@
 Package: Rmergetrees
 Type: Package
-Title: Trees aggregation
-Version: 0.1.0
+Title: Aggregating Trees
+Version: 0.1.1
 Authors@R: c(
   person("Audrey", "Hulot", role = c("aut", "cre"), email = "audrey.hulot@inra.fr"),
   person("Julien", "Chiquet", role = c("aut"), email = "julien.chiquet@inra.fr",
@@ -17,6 +17,3 @@ Imports:
     Rcpp
 LinkingTo: Rcpp
 RoxygenNote: 6.1.1
-Suggests: knitr,
-    rmarkdown
-VignetteBuilder: knitr
