@@ -1,0 +1,9 @@
+Changes in 0.1.2
+================
+
+- Uncomment code for checking the labels of the trees. Now the function will stop if the trees do not have the same leaves labels. Change function description accordingly.
+
+Changes in 0.1.1
+================
+
+- Added Example in mergeTrees description (CRAN submission warning otherwise)

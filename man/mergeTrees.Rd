@@ -7,7 +7,7 @@
 mergeTrees(hc.list, standardize = FALSE)
 }
 \arguments{
-\item{hc.list}{a list with at least one hclust object to be merge in a single consensus tree. No other tree format is supported.}
+\item{hc.list}{a list with at least one hclust object to be merge in a single consensus tree. No other tree format is supported. The trees should have the same leaves labels, otherwise the function will stop.}
 
 \item{standardize}{a boolean indicating wether the heights of the different trees should be normalized before merged. Normalization is done by divinding the heights of fusion by their maximum in each tree.}
 }

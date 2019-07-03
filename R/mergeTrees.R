@@ -7,7 +7,7 @@
 #' The method can be summarized with this property: "At height h, if elements i and j are groupes in the same clusters in all the trees, then they are in the same cluster in the consensus tree", or, equivalently:
 #' "At height h, if elements i and j are not in the same clusters in at least one of the trees, then they are not in the same cluster in the consensus tree".
 #' @name mergeTrees
-#' @param hc.list a list with at least one hclust object to be merge in a single consensus tree. No other tree format is supported.
+#' @param hc.list a list with at least one hclust object to be merge in a single consensus tree. No other tree format is supported. The trees should have the same leaves labels, otherwise the function will stop.
 #' @param standardize a boolean indicating wether the heights of the different trees should be normalized before merged. Normalization is done by divinding the heights of fusion by their maximum in each tree.
 #' @return A list of class hclust, being the consensus tree, with the following components: height, merge, method, order, and, if any, labels. For more information about these components, please see hclust function help page.
 #' @author Audrey Hulot, \email{audrey.hulot@@inra.fr}, Julien Chiquet, Guillem Rigaill
@@ -46,11 +46,11 @@ mergeTrees = function(hc.list, standardize = FALSE){
   #############################################
 
   # In case the trees have different labels, no merging possible
-  # labels <- Reduce(intersect, lapply(hc.list, function(hc) hc$labels))
-  # if (!is.null(labels)) {
-  #   stopifnot(length(labels) == n)
-  #   hc.list <- lapply(hc.list, reorder_hc)
-  # }
+  labels <- Reduce(intersect, lapply(hc.list, function(hc) hc$labels))
+  if (!is.null(labels)) {
+    stopifnot(length(labels) == n)
+    # hc.list <- lapply(hc.list, reorder_hc)
+  }
 
   #############################################
   # ----- Reconstitution paths : -------------
