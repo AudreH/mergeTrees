@@ -11,8 +11,6 @@ reorder_hc <- function(hc) {
 ##'
 ##' @param hc_obj and hclust object
 ##' @return a list woth three element: path of fusion, vector of height, ordering.
-##'
-##' @export
 as.fusionTree <- function(hc_obj) {
 
   fusionTree <- as_fusionTree(hc_obj$merge, hc_obj$order)
