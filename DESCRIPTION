@@ -9,7 +9,9 @@ Authors@R: c(
   person("Guillem", "Rigaill", role = c("aut"), email = "guillem.rigaill@inra.fr")
   )
 Maintainer: Audrey Hulot <audrey.hulot@inra.fr>
-Description: The Rmergetrees package provides a function to create a consensus hierarchical clustering out of multiple hclust objects.
+Description: Aggregates a set of trees with the same leaves to create a consensus tree. The trees are typically 
+  obtained via hierarchical clustering, hence the hclust format is is used to encode both the aggregated trees and the final 
+  consensus tree. The method is exact and proven to be O(nqlog(n)), n being the individuals and q being the number of trees to aggregate.
 Encoding: UTF-8
 LazyData: true
 License: GPL (>= 2)
