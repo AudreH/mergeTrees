@@ -10,7 +10,7 @@ Authors@R: c(
   )
 Maintainer: Audrey Hulot <audrey.hulot@inra.fr>
 Description: Aggregates a set of trees with the same leaves to create a consensus tree. The trees are typically 
-  obtained via hierarchical clustering, hence the hclust format is is used to encode both the aggregated trees and the final 
+  obtained via hierarchical clustering, hence the hclust format is used to encode both the aggregated trees and the final 
   consensus tree. The method is exact and proven to be O(nqlog(n)), n being the individuals and q being the number of trees to aggregate.
 Encoding: UTF-8
 LazyData: true
