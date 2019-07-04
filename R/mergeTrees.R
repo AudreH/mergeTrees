@@ -22,6 +22,7 @@
 #'   plot(h1)
 #'   plot(h2)
 #'   plot(MT)
+#'   par(mfrow = c(1,1))
 #' @export
 mergeTrees = function(hc.list, standardize = FALSE){
 

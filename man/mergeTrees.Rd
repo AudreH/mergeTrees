@@ -33,6 +33,7 @@ The method can be summarized with this property: "At height h, if elements i and
   plot(h1)
   plot(h2)
   plot(MT)
+  par(mfrow = c(1,1))
 }
 \author{
 Audrey Hulot, \email{audrey.hulot@inra.fr}, Julien Chiquet, Guillem Rigaill

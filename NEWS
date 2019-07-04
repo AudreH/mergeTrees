@@ -1,9 +1,12 @@
-Changes in 0.1.2
+Changes in 0.1.2 (07/03 2019)
 ================
 
 - Uncomment code for checking the labels of the trees. Now the function will stop if the trees do not have the same leaves labels. Change function description accordingly.
 
-Changes in 0.1.1
+- Example for mergeTrees: add par(mfrow = c(1,1)) at the end (CRAN requirements)
+- Description changed (CRAN requirements)
+
+Changes in 0.1.1 (07/02 2019)
 ================
 
 - Added Example in mergeTrees description (CRAN submission warning otherwise)

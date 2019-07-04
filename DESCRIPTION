@@ -9,7 +9,7 @@ Authors@R: c(
   person("Guillem", "Rigaill", role = c("aut"), email = "guillem.rigaill@inra.fr")
   )
 Maintainer: Audrey Hulot <audrey.hulot@inra.fr>
-Description: Provide a function to merge trees/dendrograms.
+Description: The Rmergetrees package provides a function to create a consensus hierarchical clustering out of multiple hclust objects.
 Encoding: UTF-8
 LazyData: true
 License: GPL (>= 2)
