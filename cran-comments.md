@@ -2,6 +2,7 @@
 ## Re submission
 - changed the name of the package to match the main function (Rmergetrees -> mergeTrees)
 - reset par options to user's options in mergeTrees example
+- remove the importation of as.fusionTree
 
 - as.fusionTree title completed (CRAN requirements) 
 - add par(mfrow = c(1,1)) at the end (CRAN requirements)
