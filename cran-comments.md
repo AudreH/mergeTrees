@@ -1,6 +1,7 @@
 
 ## Re submission
- 
+- reset par options to user's options in Rmergetrees example
+- as.fusionTree title completed (CRAN requirements) 
 - add par(mfrow = c(1,1)) at the end (CRAN requirements)
 - More comprehensive description field (CRAN requirements)
 
