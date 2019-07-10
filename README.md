@@ -6,7 +6,7 @@ A package for fastly merging tree-like objects.
 ## Install
 
 ``` r
-devtools::install_github("AudreH/mergetrees")
+devtools::install_github("AudreH/mergeTrees")
 ```
 
 ```{r, echo = TRUE}
