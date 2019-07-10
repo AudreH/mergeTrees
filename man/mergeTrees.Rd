@@ -29,11 +29,11 @@ The method can be summarized with this property: "At height h, if elements i and
   h1 = hclust(as.dist(M1))
   h2 = hclust(as.dist(M2))
   MT = mergeTrees(list(h1, h2))
-  par(mfrow = c(1,3))
+  oldpar <- par(mfrow = c(1,3))
   plot(h1)
   plot(h2)
   plot(MT)
-  par(mfrow = c(1,1))
+  par(oldpar)
 }
 \author{
 Audrey Hulot, \email{audrey.hulot@inra.fr}, Julien Chiquet, Guillem Rigaill

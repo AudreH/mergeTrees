@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{as.fusionTree}
 \alias{as.fusionTree}
-\title{Turn an hclust object into an}
+\title{Turn an hclust object into a fusion path.}
 \usage{
 as.fusionTree(hc_obj)
 }
@@ -10,8 +10,8 @@ as.fusionTree(hc_obj)
 \item{hc_obj}{and hclust object}
 }
 \value{
-a list woth three element: path of fusion, vector of height, ordering.
+a list with three element: path of fusion, vector of height, ordering.
 }
 \description{
-Turn an hclust object into an
+Turn an hclust object into a fusion path.
 }
