@@ -1,4 +1,4 @@
-Rmergetrees
+mergeTrees
 ================
 
 A package for fastly merging tree-like objects.
@@ -6,7 +6,7 @@ A package for fastly merging tree-like objects.
 ## Install
 
 ``` r
-devtools::install_github("AudreH/Rmergetrees")
+devtools::install_github("AudreH/mergetrees")
 ```
 
 ```{r, echo = TRUE}
@@ -22,6 +22,6 @@ list.trees = lapply(1:nb_trees, FUN = function(x){
 ```
 
 ```{r, echo = TRUE}
-mergedTree = merge.trees(hc.list = list.trees)
-plot(mergedTree_noStd, main = "noStd")
+mergedTree = mergeTrees(hc.list = list.trees)
+plot(mergedTree, main = "Merged Tree")
 ```
