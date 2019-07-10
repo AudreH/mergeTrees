@@ -23,7 +23,7 @@ The method can be summarized with this property: "At height h, if elements i and
 "At height h, if elements i and j are not in the same clusters in at least one of the trees, then they are not in the same cluster in the consensus tree".
 }
 \examples{
-  library(Rmergetrees)
+  library(mergeTrees)
   M1 = matrix(c(0,2,3,4,2,0,1,5,3,1,0,7,4,5,7,0), ncol = 4, nrow = 4)
   M2 = matrix(c(0,1,5,6,1,0,7,9,5,7,0,2,6,9,2,0), ncol = 4, nrow = 4)
   h1 = hclust(as.dist(M1))

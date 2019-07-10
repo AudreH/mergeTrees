@@ -2,4 +2,4 @@
 
 export(mergeTrees)
 importFrom(Rcpp,sourceCpp)
-useDynLib(Rmergetrees)
+useDynLib(mergeTrees)

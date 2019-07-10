@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // as_fusionTree
 Rcpp::IntegerMatrix as_fusionTree(IntegerMatrix merge, IntegerVector order);
-RcppExport SEXP _Rmergetrees_as_fusionTree(SEXP mergeSEXP, SEXP orderSEXP) {
+RcppExport SEXP _mergeTrees_as_fusionTree(SEXP mergeSEXP, SEXP orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -19,7 +19,7 @@ END_RCPP
 }
 // export_order
 Rcpp::IntegerVector export_order(const IntegerMatrix& merge, const IntegerVector& size);
-RcppExport SEXP _Rmergetrees_export_order(SEXP mergeSEXP, SEXP sizeSEXP) {
+RcppExport SEXP _mergeTrees_export_order(SEXP mergeSEXP, SEXP sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -31,7 +31,7 @@ END_RCPP
 }
 // getMergeMatrix
 Rcpp::List getMergeMatrix(IntegerVector group, IntegerVector parent, IntegerVector order);
-RcppExport SEXP _Rmergetrees_getMergeMatrix(SEXP groupSEXP, SEXP parentSEXP, SEXP orderSEXP) {
+RcppExport SEXP _mergeTrees_getMergeMatrix(SEXP groupSEXP, SEXP parentSEXP, SEXP orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,7 +44,7 @@ END_RCPP
 }
 // pruneSplits
 List pruneSplits(List listSetRules, IntegerMatrix orderRules, int n);
-RcppExport SEXP _Rmergetrees_pruneSplits(SEXP listSetRulesSEXP, SEXP orderRulesSEXP, SEXP nSEXP) {
+RcppExport SEXP _mergeTrees_pruneSplits(SEXP listSetRulesSEXP, SEXP orderRulesSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,14 +57,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_Rmergetrees_as_fusionTree", (DL_FUNC) &_Rmergetrees_as_fusionTree, 2},
-    {"_Rmergetrees_export_order", (DL_FUNC) &_Rmergetrees_export_order, 2},
-    {"_Rmergetrees_getMergeMatrix", (DL_FUNC) &_Rmergetrees_getMergeMatrix, 3},
-    {"_Rmergetrees_pruneSplits", (DL_FUNC) &_Rmergetrees_pruneSplits, 3},
+    {"_mergeTrees_as_fusionTree", (DL_FUNC) &_mergeTrees_as_fusionTree, 2},
+    {"_mergeTrees_export_order", (DL_FUNC) &_mergeTrees_export_order, 2},
+    {"_mergeTrees_getMergeMatrix", (DL_FUNC) &_mergeTrees_getMergeMatrix, 3},
+    {"_mergeTrees_pruneSplits", (DL_FUNC) &_mergeTrees_pruneSplits, 3},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_Rmergetrees(DllInfo *dll) {
+RcppExport void R_init_mergeTrees(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

@@ -1,4 +1,4 @@
-Package: Rmergetrees
+Package: mergeTrees
 Type: Package
 Title: Aggregating Trees
 Version: 0.1.3

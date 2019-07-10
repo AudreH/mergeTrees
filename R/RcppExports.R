@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 as_fusionTree <- function(merge, order) {
-    .Call('_Rmergetrees_as_fusionTree', PACKAGE = 'Rmergetrees', merge, order)
+    .Call('_mergeTrees_as_fusionTree', PACKAGE = 'mergeTrees', merge, order)
 }
 
 export_order <- function(merge, size) {
-    .Call('_Rmergetrees_export_order', PACKAGE = 'Rmergetrees', merge, size)
+    .Call('_mergeTrees_export_order', PACKAGE = 'mergeTrees', merge, size)
 }
 
 getMergeMatrix <- function(group, parent, order) {
-    .Call('_Rmergetrees_getMergeMatrix', PACKAGE = 'Rmergetrees', group, parent, order)
+    .Call('_mergeTrees_getMergeMatrix', PACKAGE = 'mergeTrees', group, parent, order)
 }
 
 pruneSplits <- function(listSetRules, orderRules, n) {
-    .Call('_Rmergetrees_pruneSplits', PACKAGE = 'Rmergetrees', listSetRules, orderRules, n)
+    .Call('_mergeTrees_pruneSplits', PACKAGE = 'mergeTrees', listSetRules, orderRules, n)
 }
 

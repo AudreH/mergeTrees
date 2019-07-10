@@ -1,3 +1,3 @@
-#' @useDynLib Rmergetrees
+#' @useDynLib mergeTrees
 #' @importFrom Rcpp sourceCpp
 NULL

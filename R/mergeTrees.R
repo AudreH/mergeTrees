@@ -12,7 +12,7 @@
 #' @return A list of class hclust, being the consensus tree, with the following components: height, merge, method, order, and, if any, labels. For more information about these components, please see hclust function help page.
 #' @author Audrey Hulot, \email{audrey.hulot@@inra.fr}, Julien Chiquet, Guillem Rigaill
 #' @examples
-#'   library(Rmergetrees)
+#'   library(mergeTrees)
 #'   M1 = matrix(c(0,2,3,4,2,0,1,5,3,1,0,7,4,5,7,0), ncol = 4, nrow = 4)
 #'   M2 = matrix(c(0,1,5,6,1,0,7,9,5,7,0,2,6,9,2,0), ncol = 4, nrow = 4)
 #'   h1 = hclust(as.dist(M1))
