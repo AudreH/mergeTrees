@@ -7,10 +7,10 @@ reorder_hc <- function(hc) {
   hc
 }
 
-##' Turn an hclust object into an
-##'
-##' @param hc_obj and hclust object
-##' @return a list woth three element: path of fusion, vector of height, ordering.
+## Turn an hclust object into a Fusion tree format
+##
+##  hc_obj and hclust object
+## a list woth three element: path of fusion, vector of height, ordering.
 as.fusionTree <- function(hc_obj) {
 
   fusionTree <- as_fusionTree(hc_obj$merge, hc_obj$order)
