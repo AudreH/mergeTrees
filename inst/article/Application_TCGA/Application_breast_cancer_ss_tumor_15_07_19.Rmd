@@ -1,0 +1,394 @@
+---
+title: "Application breast cancer (sans tumor)"
+output:  
+  pdf_document:
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    highlight: tango   
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+- \usepackage[normalem]{ulem}
+geometry: "left=1cm,right=1cm,top=1.5cm,bottom=1.5cm"
+---
+
+```{r}
+rm(list = ls())
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+# setwd("/home/hulot/Documents/these_documents/articles/Tree_agregation_method/Application_breast_cancer_17_04_19/")
+```
+
+```{r}
+library(kableExtra)
+library(aricode) # github
+library(devtools)
+library(mergeTrees)
+# library(univarclust)
+library(ggplot2)
+library(gridExtra)
+library(RColorBrewer)
+library(dendextend)
+library(tidyverse)
+library(viridis)
+library(rsvd)
+```
+
+# Settings
+
+```{r}
+dist_arg = "euclidean" 
+linkage_arg = "ward.D2"
+# linkage_arg = "single"
+new_plot_window = FALSE 
+par(mar = c(2,2,2,2))
+par(mfrow = c(1,1))
+
+# Figure settings
+cex.main_arg = 1.2
+cex.axis_arg = 1.2
+cex.rowlabels_arg = 1.1
+height_arg = 3.92
+width_arg = 5.4
+mar_arg = c(3,4.5,1,0)
+```
+
+## Scale/center settings
+
+```{r}
+center_arg = TRUE
+scale_arg = FALSE
+```
+
+## SVD settings
+
+```{r}
+k_svd = 5 # chercher 5, 10 ou 20
+```
+
+# Fonctions
+
+Piquées à Julien
+
+```{r}
+directClustering <- function(dataSets) {
+  hclust(dist(do.call("cbind", dataSets), method = "euclidean"), method = "ward.D2")
+}
+
+averagedClustering <- function(dataSets) {
+  AD <- Reduce("+", lapply(dataSets, dist, method = "euclidean")) / length(dataSets)
+  hclust(AD, method = "ward.D2")
+}
+
+
+# Ancienne fonction
+# mergeTreesWard <- function(dataSets) {
+#   hc_list <- lapply(dataSets, FUN = function(x) {
+#     univarclust::ward_1d(x)
+#   })
+#   mergeTrees::mergeTrees(hc_list)
+# } 
+
+# Nouvelle fonction : ajout du 18/07/19
+# Raison : y a peut-être une erreur de code dans celle d'univarclust. 
+# Par contre : elle sera peut-être moins efficace question temps de calcul. 
+mergeTreesWard <- function(dataSets) {
+  hc_list <- lapply(dataSets, FUN = function(x) {
+    # univarclust::ward_1d(x)
+    hclust(dist(x, method = "euclidean"), method = "ward.D2")
+        # hclust(dist(x, method = "euclidean"), method = "ward.D")
+  })
+  mergeTrees::mergeTrees(hc_list)
+} 
+```
+
+
+# Chargement des données 
+
+```{r}
+load("Data/tcga_brca_data.RData")
+load("Data/clinical.RData")
+
+clinic1 = clinic1[order(clinic1$bcr_patient_barcode),]
+zmethyl = zmethyl[order(rownames(zmethyl)),]
+zmirna = zmirna[order(rownames(zmirna)),]
+zmutation = zmutation[order(rownames(zmutation)),]
+zprotein = zprotein[order(rownames(zprotein)),]
+zrna = zrna[order(rownames(zrna)),]
+ztumor = ztumor[order(rownames(ztumor)),]
+
+dataSets = list("methyl" = zmethyl, "mirna" = zmirna,  
+                "protein" = zprotein, "rna" = log2(zrna+1))
+
+## Ajout 17/07/19
+# dataSets = lapply(dataSets, FUN = function(data) t(apply(data, 1, FUN = function(x) x/sum(x))))
+# dataSets = lapply(dataSets, FUN = function(data) data/max(data))
+# dataSets_scaled = lapply(dataSets, scale, center = TRUE, scale = TRUE)
+
+dataSets = lapply(dataSets, scale, center = center_arg, scale = scale_arg) 
+```
+
+# Traitement des données cliniques
+
+```{r}
+clinical = clinic1
+rownames(clinical) = clinical$bcr_patient_barcode
+clinical = clinical[,-which(colnames(clinical)=="bcr_patient_barcode")]
+```
+
+## Légende pour les clustering
+
+```{r}
+# Legende:
+the_bars = data.frame(apply(clinical, 2, as.character))
+the_bars$subtype = as.character(the_bars$subtype)
+
+the_bars$ER_status = ifelse(the_bars$ER_status=="Positive", "grey88", "black")
+the_bars$PR_status = ifelse(the_bars$PR_status=="Positive", "grey88", "black")
+the_bars$subtype[the_bars$subtype=="Basal-like"] = "dimgray" ; the_bars$subtype[the_bars$subtype=="HER2-enriched"] = "blueviolet"; 
+the_bars$subtype[the_bars$subtype=="Luminal A"] = "mistyrose3" ; the_bars$subtype[the_bars$subtype=="Luminal B"] = "chocolate" 
+
+the_bars = the_bars[,which(colnames(the_bars)%in%c("subtype", "ER_status", "PR_status"))]
+```
+
+# Application des méthodes MT, AD, DC
+
+```{r}
+hc_list_methods = list() 
+```
+
+## Méthodes multivariées
+
+```{r}
+hc_list = lapply(dataSets, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg))
+```
+
+```{r}
+hc_list_methods$AD = averagedClustering(dataSets)
+hc_list_methods$DC = directClustering(lapply(dataSets, scale, center = TRUE, scale = TRUE))
+hc_list_methods$MT = mergeTrees(hc_list)
+```
+
+## Méthodes spectrales multivariées
+
+### Spectral sur tables séparées
+
+```{r}
+rSVD <- lapply(dataSets, rsvd, k = k_svd)
+rSVD_dataSets = lapply(rSVD, FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
+```
+
+```{r}
+dist_sp_list = lapply(rSVD_dataSets, FUN = function(dat) dist(dat, method = dist_arg))
+hc_sp_list = lapply(dist_sp_list, FUN = function(dist_mat) hclust(dist_mat, method = linkage_arg))
+```
+
+```{r}
+hc_list_methods$SDC = directClustering(rSVD_dataSets)
+hc_list_methods$SAD = averagedClustering(rSVD_dataSets)
+hc_list_methods$SMT = mergeTrees(hc_sp_list)
+```
+
+## Méthodes univariees
+
+```{r}
+dataSets_univar = as.list(data.frame(Reduce("cbind", dataSets)))
+```
+
+```{r}
+hc_list_methods$ADuni = averagedClustering(dataSets_univar)
+hc_list_methods$MTuni = mergeTreesWard(dataSets_univar)
+```
+
+## Méthodes spectrale univariees
+
+### Spectral sur tables séparées
+
+```{r}
+dataSets_sp <- lapply(lapply(dataSets, rsvd, k = k_svd), FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
+data_sp_univar <- as.list(as.data.frame(do.call("cbind", dataSets_sp)))
+```
+
+```{r}
+hc_list_methods$SADuni = averagedClustering(data_sp_univar)
+hc_list_methods$SMTuni = mergeTreesWard(data_sp_univar)
+```
+
+### Spectral sur tables concaténées 
+
+```{r}
+rSVD <- rsvd(do.call("cbind", dataSets), k = k_svd) 
+dataSets_spectral <- as.list(as.data.frame(rSVD$u %*% diag(rSVD$d)))
+```
+
+```{r}
+hc_list_methods$ScDC = hclust(dist(as.data.frame(rSVD$u %*% diag(rSVD$d)), method = "euclidean"), method = "ward.D2")
+hc_list_methods$ScADuni = averagedClustering(dataSets_spectral)
+hc_list_methods$ScMTuni = mergeTreesWard(dataSets_spectral)
+```
+
+## Sectral sur tables de base
+
+```{r}
+rSVD <- lapply(dataSets, rsvd, k = k_svd)
+rSVD_dataSets = lapply(rSVD, FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
+names(rSVD_dataSets) = paste0(names(rSVD_dataSets), "sp")
+
+hc_list = c(hc_list, lapply(rSVD_dataSets, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
+```
+
+# Comparaison des arbres des tables de base 
+
+```{r}
+NID_compare = function(tree_1, tree_2, cut_index_max = NULL){
+  if(is.null(cut_index_max)) cut_index_max = length(tree_1$order)
+  unlist(lapply(2:cut_index_max, FUN = function(cut_index) NID(cutree(tree_1, k = cut_index), 
+                                                               cutree(tree_2, k = cut_index))))
+}
+
+mat_NID_compare = sapply(hc_list, function(x) sapply(hc_list, function(y) min(NID_compare(x,y, cut_index_max = 20))))
+```
+
+#  NID exploration fonction @ Julien
+
+## Parametre pour niveau de coupure maximum
+```{r}
+cutree_index_max = 104
+```
+
+## Fonction get_nid
+
+```{r}
+get_nid <- function(clustering, reference) {
+  clusterings <- cutree(clustering, seq.int(1:cutree_index_max)) %>% as.data.frame() %>% as.list()
+  nid <- map_dbl(clusterings, ~NID(., reference))  
+  nid
+}
+```
+
+## Fonction figure 
+
+```{r}
+plot_method = function(arbres_liste){
+  nids_ER_status <- map_df(arbres_liste, get_nid, clinical$ER_status) %>%
+  add_column(ngroup = seq.int(1:cutree_index_max)) %>% gather(key = "DataSet", value = "NID", -ngroup) %>%
+  add_column(clinical = "ER Status")
+nids_PR_status <- map_df(arbres_liste, get_nid, clinical$PR_status) %>%
+  add_column(ngroup = seq.int(1:cutree_index_max)) %>% gather(key = "DataSet", value = "NID", -ngroup) %>%
+  add_column(clinical = "PR Status")
+nids_subtype <- map_df(arbres_liste, get_nid, clinical$subtype) %>%
+  add_column(ngroup = seq.int(1:cutree_index_max)) %>% gather(key = "DataSet", value = "NID", -ngroup) %>%
+  add_column(clinical = "Subtype")
+nids <- rbind(nids_ER_status, nids_PR_status, nids_subtype)
+
+nids %>% group_by(DataSet) %>% 
+  ggplot(aes(x = ngroup, y = NID, color = DataSet))  + geom_line() + facet_grid(.~clinical) + theme_bw() + theme(legend.position="bottom")+
+   scale_color_viridis(discrete = TRUE) -> plot_data
+
+return(list(nids = nids, plot_data = plot_data))
+}
+```
+
+```{r, fig.align = "center", fig.width = 9, fig.height = 4}
+res = plot_method(hc_list)
+print(res$plot_data)
+```
+
+```{r, fig.align = "center", fig.width = 9, fig.height = 4}
+# res = plot_method(hc_sp_list)
+# print(res$plot_data)
+```
+
+### Meilleur NID possible et nombre de groupes associé
+
+```{r}
+nids_df = as.data.frame(res$nids)
+mat_res_best_nids = matrix(NA, ncol = 6, nrow = length(hc_list))
+compteur_clinique = 1
+for(clinique in unique(nids_df$clinical)){
+  compteur_methode = 1
+  for(dataset in unique(nids_df$DataSet)){
+    subset_df = nids_df[nids_df$DataSet==dataset & nids_df$clinical==clinique,]
+    mat_res_best_nids[compteur_methode, compteur_clinique:(compteur_clinique+1)] = c(subset_df$ngroup[which.min(subset_df$NID)], subset_df$NID[which.min(subset_df$NID)])
+    compteur_methode = compteur_methode + 1
+  }  
+  compteur_clinique = compteur_clinique+2
+}
+# colnames(mat_res_best_nids) =  paste(rep(unique(nids_df$clinical), each = 2), c("NID", "nbgroup"))
+rownames(mat_res_best_nids) = names(hc_list)
+mat_res_sp_data = mat_res_best_nids
+```
+
+```{r}
+knitr::kable(round(mat_res_best_nids,2), "latex",booktabs = T, escape = TRUE, linesep = "", row.names = TRUE)%>%
+  add_header_above(c("", rep(c("Nb groupes", "NID"), 3)))%>%
+  add_header_above(c("", "ER status" = 2, "PR status" = 2, "Subtype" = 2))%>%
+  kable_styling(latex_options =c("repeat_header"), font_size = 10)
+```
+
+## Méthodes d'agrégation 
+
+### Figures (code Julien)
+
+#### Toutes les méthodes ensemble
+
+```{r, fig.align = "center", fig.width = 9, fig.height = 4}
+res = plot_method(hc_list_methods)
+print(res$plot_data)
+```
+
+```{r}
+nids_df = data.frame(res$nids)
+nids_df$Method = nids_df$DataSet
+mat_res_best_nids = matrix(NA, ncol = 6, nrow = length(hc_list_methods))
+compteur_clinique = 1
+for(clinique in unique(nids_df$clinical)){
+  compteur_methode = 1
+  for(method in unique(nids_df$Method)){
+    subset_df = nids_df[nids_df$Method==method & nids_df$clinical==clinique,]
+    mat_res_best_nids[compteur_methode, compteur_clinique:(compteur_clinique+1)] = c(subset_df$ngroup[which.min(subset_df$NID)], subset_df$NID[which.min(subset_df$NID)])
+    compteur_methode = compteur_methode + 1
+  }  
+  compteur_clinique = compteur_clinique+2
+}
+rownames(mat_res_best_nids) = unique(nids_df$Method)
+mat_res_methods = mat_res_best_nids
+```
+
+```{r}
+knitr::kable(round(mat_res_best_nids,2), "latex",booktabs = T, escape = TRUE, linesep = "", row.names = TRUE)%>%
+  add_header_above(c("", rep(c("Nb groupes", "NID"), 3)))%>%
+  add_header_above(c("", "ER status" = 2, "PR status" = 2, "Subtype" = 2))%>%
+  kable_styling(latex_options =c("repeat_header"), font_size = 10)
+```
+
+
+
+```{r}
+# mat_affichage = rbind(mat_res_data, mat_res_sp_data, mat_res_methods)
+# knitr::kable(round(mat_affichage,2), "latex",booktabs = T, escape = TRUE, linesep = "", row.names = TRUE)%>%
+#   add_header_above(c("", rep(c("Nb groupes", "NID"), 3)))%>%
+#   add_header_above(c("", "ER status" = 2, "PR status" = 2, "Subtype" = 2))%>%
+#   pack_rows("DataSets", 1, length(dataSets))%>%
+#   pack_rows("Spectral DataSets", length(dataSets)+1,length(dataSets)*2)%>%
+#   pack_rows("Multivariates Methods", length(dataSets)*2+1, length(dataSets)*2+3)%>%
+#   pack_rows("Multivariates Spectral Methods", length(dataSets)*2+4, length(dataSets)*2+6)%>%
+#   pack_rows("Univariates Methods", length(dataSets)*2+7, length(dataSets)*2+8)%>%
+#   pack_rows("Univariates Spectral Methods", length(dataSets)*2+9, nrow(mat_affichage))%>%
+#   kable_styling(latex_options =c("repeat_header"), font_size = 10)
+```
