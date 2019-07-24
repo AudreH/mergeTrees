@@ -12,54 +12,7 @@ library(viridis)
 library(profvis)
 library(Rcpp)
 
-source("/home/hulot/Documents/packages_R/mergeTrees/R/utils.R")
-source("/home/hulot/Documents/packages_R/mergeTrees/R/")
-sourceCpp("/home/hulot/Documents/packages_R/mergeTrees/src/as.fusionTree.cpp")
-sourceCpp("/home/hulot/Documents/packages_R/mergeTrees/src/prune_splits.cpp")
-sourceCpp("/home/hulot/Documents/packages_R/mergeTrees/src/export_hclust.cpp")
 
-# ---- Essai : ----
-
-mergeTrees2 = function (hc.list, standardize = FALSE) 
-  {
-    # n <- unique(sapply(hc.list, function(hc) length(hc$order)))
-    n = length(hc.list[[1]]$order)
-    # stopifnot(is.integer(n))
-    p <- length(hc.list)
-    # if (standardize) {
-    #   hc.list <- lapply(hc.list, function(hc) {
-    #     hc$height <- hc$height/max(hc$height)
-    #     hc
-    #   })
-    # }
-    # labels <- Reduce(intersect, lapply(hc.list, function(hc) hc$labels))
-    # if (!is.null(labels)) {
-    #   stopifnot(length(labels) == n)
-    # }
-    rules <- lapply(hc.list, as.fusionTree)
-    heights <- unlist(lapply(rules, function(l) l$height))
-    rules_order <- cbind(rep(1:(n - 1), p), rep(1:p, each = n - 
-                                                  1))
-    rules_order <- rules_order[order(heights, decreasing = TRUE), 
-                               ]
-    aggreg <- pruneSplits(listSetRules = rules, orderRules = rules_order, 
-                          n)
-    lambdaRules <- sapply(aggreg$index_rule[-1], function(i) {
-      rules[[rules_order[i, 2]]]$height[rules_order[i, 1]]
-    })
-    merging <- getMergeMatrix(aggreg$group, aggreg$parent, order(aggreg$group, 
-                                                                 decreasing = TRUE) - 1)
-    mergeMatrix <- merging$merge
-    mergeMatrix[mergeMatrix <= n] <- -mergeMatrix[mergeMatrix <= 
-                                                    n]
-    mergeMatrix[mergeMatrix > n] <- mergeMatrix[mergeMatrix > 
-                                                  n] - n
-    Order <- export_order(mergeMatrix, merging$node_size)
-    consensusTree <- structure(list(merge = mergeMatrix, height = rev(lambdaRules), 
-                                    order = Order, labels = hc.list[[1]]$labels, method = "consensus", 
-                                    dist.method = NA), class = "hclust")
-    consensusTree
-  }
 
 # ---- Fonctions : ----
 
@@ -97,9 +50,6 @@ mergeTreesWard <- function(data) {
 #   mergeTrees(lapply(data, FUN = function(x) hclust(dist(x, method = "euclidean"), method = "ward.D2")))
 # }
 
-mergeTreesWard3 = function(data){
-  mergeTrees2(lapply(data, FUN = function(x) {univarclust::ward_1d(x)}))
-}
 
 mergeTreesWard4 = function(data){
   lapply(data, FUN = function(x) {univarclust::ward_1d(x)})
@@ -129,7 +79,7 @@ profvis({
 })
 
 profvis({		
-  MTuni = mergeTreesWard3(data_univar)
+  MTuni = mergeTreesWard4(data_univar)
 })
 
 # --- Tests : microbenchmark : ----
@@ -137,7 +87,6 @@ profvis({
 test_m = microbenchmark(
   ACuni = averaged_clustering(data_univar, hc.list = hc_list),
   MTuni = mergeTreesWard(data_univar),
-  # MTuni2 = mergeTreesWard3(data_univar),
   MTuni3 = mergeTreesWard4(data_univar),
   times = n_eval
 )
