@@ -10,7 +10,7 @@ library(parallel)
 library(viridis)
 
 ncores = 3
-n_eval = 2
+n_eval = 10
 
 draw_data <- function(n, p) {
    matrix(rnorm(n*p),n,p) # Nombre d'individus, nombre de variables, c'est tout. 
@@ -45,19 +45,19 @@ simu <- function(n, p,  n_eval = 10, prop_rsvd = 0.1) {
   microbenchmark(
     
     DC = {M = matrix(NA, ncol = p, nrow = n); direct_clustering(data_univar)},
-    SDC = {rSVD <- rsvd(Reduce("cbind", data_univar), k = prop_rsvd*length(data_univar)); 
+    SDC = {rSVD <- rsvd(Reduce("cbind", data_univar), k = prop_rsvd*length(data_univar));
     hclust(dist(as.data.frame(rSVD$u %*% diag(rSVD$d)), method = "euclidean"), method = "ward.D2")},
     
     # Methodes univariees
-    ACuni = averaged_clustering(data_univar),
-    MTuni = mergeTreesWard(data_univar),
+    # ACuni = averaged_clustering(data_univar),
+    # MTuni = mergeTreesWard(data_univar),
     
     # Methods univariees spectrales
-    SACuni = {rSVD <- rsvd(Reduce("cbind", data_univar), k = prop_rsvd*length(data_univar));
-    averaged_clustering(as.list(as.data.frame(rSVD$u %*% diag(rSVD$d))))},
-    
-    SMTuni = {rSVD <- rsvd(Reduce("cbind", data_univar), k = prop_rsvd*length(data_univar));
-    mergeTreesWard(as.list(as.data.frame(rSVD$u %*% diag(rSVD$d))))},
+    # SACuni = {rSVD <- rsvd(Reduce("cbind", data_univar), k = prop_rsvd*length(data_univar));
+    # averaged_clustering(as.list(as.data.frame(rSVD$u %*% diag(rSVD$d))))},
+    # 
+    # SMTuni = {rSVD <- rsvd(Reduce("cbind", data_univar), k = prop_rsvd*length(data_univar));
+    # mergeTreesWard(as.list(as.data.frame(rSVD$u %*% diag(rSVD$d))))},
     
     times = n_eval
   )
@@ -68,15 +68,16 @@ simu <- function(n, p,  n_eval = 10, prop_rsvd = 0.1) {
 # ---- Simulations nombre d'individus ----
 
 lists_res_n = list()
-n_possibilities = c(50,100,250,500, 1000)
+# n_possibilities = c(50,100,250,500, 1000, 5000, 10000)
+n_possibilities = c(10000)
 p_fix = 1000
 # q_fix = 3
 # n_eval = 10
 prop_rsvd = 0.25
 
 lists_res_n = mclapply(n_possibilities, FUN = function(n_ind) simu(n_ind, p_fix, n_eval, prop_rsvd), mc.cores = ncores)
-save(lists_res_n, file = "Timings_individuals.RData")
-load("Timings_individuals.RData")
+save(lists_res_n, file = "Timings_individuals_10000_DC.RData")
+load("Timings_individuals2.RData")
 names(lists_res_n) = n_possibilities
 
 lists_res_n
@@ -143,7 +144,7 @@ ggplot_var
 load("Timings_features.RData")
 load("Timings_individuals.RData")
 
-n_possibilities = c(50,100,250,500, 1000)
+n_possibilities = c(50,100,250,500, 1000, 5000, 10000)
 p_possibilities = c(1000, 2500, 5000, 10000, 25000, 50000)
 n_eval = 10
 
@@ -213,16 +214,3 @@ gg
 
 ggsave(plot = gg, filename = "Simulations_feat_time.pdf", device = "pdf", width = 15, height = 14, units = "cm")
 
-# --- MergeTree ggplot ----
-# 
-# ggplot_mt = ggplot_all[grep("MT", ggplot_all$Method),]
-# 
-# gg = ggplot(data = ggplot_mt, aes(x = N, y = Mean, colour = Method)) +
-#   geom_line(size = 1) +
-#   geom_errorbar(aes(ymin=Mean-sqrt(1.96)*SD/sqrt(n_eval), ymax=Mean+sqrt(1.96)*SD/sqrt(n_eval)), width=.1) +
-#   facet_grid(~ Compare, scales = "free") +
-#   theme_bw() + ylab("Time (s)") + xlab("") +
-#   ggtitle("Simulations results - Time")
-# gg
-# 
-# ggsave(plot = gg, filename = "mergeTrees_time.pdf", device = "pdf", width = 19, height = 5.5, units = "cm")
