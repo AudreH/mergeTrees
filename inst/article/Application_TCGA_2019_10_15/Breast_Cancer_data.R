@@ -171,7 +171,6 @@ plot_method = function(arbres_liste){
 res = plot_method(hc_list)
 print(res$plot_data)
 
-
 ### Meilleur NID possible et nombre de groupes associé
 
 
@@ -189,6 +188,8 @@ for(clinique in unique(nids_df$clinical)){
 }
 rownames(mat_res_best_nids) = names(hc_list)
 mat_res_sp_data = mat_res_best_nids
+
+round(mat_res_sp_data, 2)
 
 ## Méthodes d'agrégation 
 
@@ -214,3 +215,6 @@ for(clinique in unique(nids_df$clinical)){
 }
 rownames(mat_res_best_nids) = unique(nids_df$Method)
 mat_res_methods = mat_res_best_nids
+
+round(mat_res_methods, 2)
+
