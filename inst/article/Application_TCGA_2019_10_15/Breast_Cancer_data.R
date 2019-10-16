@@ -77,20 +77,6 @@ hc_list_methods$AD = averagedClustering(dataSets)
 hc_list_methods$DC = directClustering(lapply(dataSets, scale, center = center_arg, scale = scale_arg))
 hc_list_methods$MT = mergeTrees(hc_list)
 
-## Méthodes spectrales multivariées
-
-### Spectral sur tables séparées
-
-rSVD <- lapply(dataSets, rsvd, k = k_svd)
-rSVD_dataSets = lapply(rSVD, FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
-
-dist_sp_list = lapply(rSVD_dataSets, FUN = function(dat) dist(dat, method = dist_arg))
-hc_sp_list = lapply(dist_sp_list, FUN = function(dist_mat) hclust(dist_mat, method = linkage_arg))
-
-hc_list_methods$SDC = directClustering(rSVD_dataSets)
-hc_list_methods$SAD = averagedClustering(rSVD_dataSets)
-hc_list_methods$SMT = mergeTrees(hc_sp_list)
-
 ## Méthodes univariees
 
 dataSets_univar = as.list(data.frame(Reduce("cbind", dataSets)))
@@ -99,14 +85,6 @@ hc_list_methods$ADuni = averagedClustering(dataSets_univar)
 hc_list_methods$MTuni = mergeTreesWard(dataSets_univar)
 
 ## Méthodes spectrale univariees
-
-### Spectral sur tables séparées
-
-dataSets_sp <- lapply(lapply(dataSets, rsvd, k = k_svd), FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
-data_sp_univar <- as.list(as.data.frame(do.call("cbind", dataSets_sp)))
-
-hc_list_methods$SADuni = averagedClustering(data_sp_univar)
-hc_list_methods$SMTuni = mergeTreesWard(data_sp_univar)
 
 ### Spectral sur tables concaténées 
 
