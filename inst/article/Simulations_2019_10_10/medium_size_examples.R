@@ -10,8 +10,6 @@ library(viridis)
 library(gridExtra)
 library(tidyverse)
 theme_set(theme_bw())
-
-setwd("/home/hulot/Documents/these_documents/articles/Tree_aggregation_method_1d/Simulations/Simulations_2019_10_10/")
 source("util.R")
 
 width_fig = 20
@@ -22,15 +20,22 @@ height_fig = 10
 
 ## SIMULATION PARAMETERS (COMMON SETTINGS)
 
-ncores = 2
-n_grp <- 4
-grp_size <- 25
-n0 <- 1000
-n1 <- 100
-n_grp_per_data <- 3
+ncores = 10
+n_grp <- 10
+grp_size <- 50
+n0 <- 500
+n1 <- 50
+n_grp_per_data <- 2
 n_sim <- 10
-# k_svd = 5
 x_lim = 100
+
+# ncores = 10
+# n_grp <- 4
+# grp_size <- 25
+# n0 <- 1000
+# n1 <- 100
+# n_grp_per_data <- 3
+# n_sim <- 10
 
 
 # ---- Essai : ----
@@ -38,6 +43,7 @@ x_lim = 100
 separability = c(seq(0.1,1,by = 0.1), c(seq(1,10, by = 1)))
 # separability = 1
 
+separability = c(.2, 0.4, 1)
 
 Res_separability = lapply(separability, FUN = function(sep_param){
   
@@ -92,8 +98,8 @@ Res_separability = lapply(separability, FUN = function(sep_param){
   return(list(res_plot1  = res_plot1, res_plot2 = res_plot2))
 })
 
-save(Res_separability, file = "Res_separability.RData")
-load("Res_separability.RData")
+# save(Res_separability, file = "Res_separability.RData")
+# load("Res_separability.RData")
 
 # ---- Res plot All ----
 
@@ -110,34 +116,34 @@ p_all = ggplot(res_plot,  aes(nb_grp, NID, color = Method)) +
   geom_line() + geom_point(aes(shape = Method)) +
   facet_grid(Scenario ~ Separability) +
   scale_color_viridis(discrete = TRUE) +
-  scale_x_continuous(trans = 'log', breaks = c(1,2,4,10,25,50,100)) +
+  # scale_x_continuous(trans = 'log', breaks = c(1,2,4,10,25,50,100)) +
   theme(legend.position="bottom", legend.box = "horizontal") +
-  guides(color = guide_legend(nrow = 1)) +
+  guides(color = guide_legend(nrow = 1)) + xlim(c(0,50)) +
   xlab("Number of groups")
 p_all
 ggsave(plot = p_all, filename = "Simulations_plots_all.pdf", device = "pdf", width = 100, height = 15, units = "cm")
 
 
 # ---- Res plot Sauf SpAD et spDC ----
-
-res_plot = do.call("rbind", c(lapply(Res_separability, FUN = function(res) res$res_plot1),
-                              lapply(Res_separability, FUN = function(res) res$res_plot2)))
-colnames(res_plot)[which(colnames(res_plot)=="method")] = "Method"
-
-# Changement noms de methodes pour coller avec le reste de l'article
-Method_vect = as.character(res_plot$Method)
-res_plot2 = res_plot[-which(res_plot$Method%in%c("SpAD", "SpDC")),]
-
-res_plot2$Method = factor(Method_vect)
-
-p_all = ggplot(res_plot2,  aes(nb_grp, NID, color = Method)) +
-  geom_line() + geom_point(aes(shape = Method)) +
-  facet_grid(Scenario ~ Separability) +
-  scale_color_viridis(discrete = TRUE) +
-  scale_x_continuous(trans = 'log', breaks = c(1,2,4,10,25,50,100)) +
-  theme(legend.position="bottom", legend.box = "horizontal") +
-  guides(color = guide_legend(nrow = 1)) +
-  xlab("Number of groups")
-p_all
-ggsave(plot = p_all, filename = "Simulations_plots_all2.pdf", device = "pdf", width = 100, height = 15, units = "cm")
-
+# 
+# res_plot = do.call("rbind", c(lapply(Res_separability, FUN = function(res) res$res_plot1),
+#                               lapply(Res_separability, FUN = function(res) res$res_plot2)))
+# colnames(res_plot)[which(colnames(res_plot)=="method")] = "Method"
+# 
+# # Changement noms de methodes pour coller avec le reste de l'article
+# Method_vect = as.character(res_plot$Method)
+# res_plot2 = res_plot[-which(res_plot$Method%in%c("SpAD", "SpDC")),]
+# 
+# res_plot2$Method = factor(Method_vect)
+# 
+# p_all = ggplot(res_plot2,  aes(nb_grp, NID, color = Method)) +
+#   geom_line() + geom_point(aes(shape = Method)) +
+#   facet_grid(Scenario ~ Separability) +
+#   scale_color_viridis(discrete = TRUE) +
+#   scale_x_continuous(trans = 'log', breaks = c(1,2,4,10,25,50,100)) +
+#   theme(legend.position="bottom", legend.box = "horizontal") +
+#   guides(color = guide_legend(nrow = 1)) +
+#   xlab("Number of groups")
+# p_all
+# ggsave(plot = p_all, filename = "Simulations_plots_all2.pdf", device = "pdf", width = 100, height = 15, units = "cm")
+# 
