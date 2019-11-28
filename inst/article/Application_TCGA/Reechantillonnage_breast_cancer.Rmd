@@ -1,5 +1,5 @@
 ---
-title: "Reechantillonnage pour NID (sans tumor)"
+title: "Reechantillonnage pour NID (sans tumor) : division par première valeur propre"
 output:  
   pdf_document:
     toc: true # table of content true
@@ -28,13 +28,8 @@ rm(list = ls())
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.path = "Reechant/")
 ```
-
-```{r}
-# setwd("/home/hulot/Documents/these_documents/articles/Tree_agregation_method/Application_breast_cancer_17_04_19/")
-```
-
 
 ```{r}
 library(kableExtra)
@@ -96,16 +91,6 @@ averagedClustering <- function(dataSets) {
   hclust(AD, method = "ward.D2")
 }
 
-# mergeTreesWard <- function(dataSets) {
-#   hc_list <- lapply(dataSets, FUN = function(x) {
-#     univarclust::ward_1d(x)
-#   })
-#   mergeTrees::mergeTrees(hc_list)
-# } 
-
-# Nouvelle fonction : ajout du 18/07/19
-# Raison : y a peut-être une erreur de code dans celle d'univarclust. 
-# Par contre : elle sera peut-être moins efficace question temps de calcul. 
 mergeTreesWard <- function(dataSets) {
   hc_list <- lapply(dataSets, FUN = function(x) {
     # univarclust::ward_1d(x)
@@ -120,22 +105,17 @@ mergeTreesWard <- function(dataSets) {
 # Chargement des données 
 
 ```{r}
-load("Data/tcga_brca_data.RData")
-load("Data/clinical.RData")
+load("tcga_brca_data.RData")
+load("clinical.RData")
 
 clinic1 = clinic1[order(clinic1$bcr_patient_barcode),]
 zmethyl = zmethyl[order(rownames(zmethyl)),]
 zmirna = zmirna[order(rownames(zmirna)),]
-zmutation = zmutation[order(rownames(zmutation)),]
 zprotein = zprotein[order(rownames(zprotein)),]
 zrna = zrna[order(rownames(zrna)),]
-ztumor = ztumor[order(rownames(ztumor)),]
 
 dataSets = list("methyl" = zmethyl, "mirna" = zmirna,  
                 "protein" = zprotein, "rna" = log2(zrna+1))
-
-# dataSets = lapply(dataSets, scale, center = center_arg, scale = scale_arg) 
-# dataSets_scaled = lapply(dataSets, scale, center = TRUE, scale = TRUE)
 ```
 
 # Traitement des données cliniques
@@ -224,25 +204,24 @@ abline(h = min(table(unlist(samples_numbers))), col = "red", lty = "dashed", lw 
 
 # Estimation des NID minimum pour les échantillonnages
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 library(parallel)
 res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   if(indice_subset %% 10 == 0) print(indice_subset)
-  # print(indice_subset)
-  # indice_subset = 1
 
   # Creation des tables subset
   row_selected = samples_numbers[[indice_subset]]
   dataSets_subset = lapply(dataSets, FUN = function(datatable) datatable[row_selected, ])
   dataSets_subset = lapply(dataSets_subset, FUN = function(x) {rownames(x) = 1:nrow(x) ; return(x)})
-  
-  dataSets_subset_scaled = lapply(dataSets_subset, scale, center = TRUE, scale = TRUE)
     
   dataSets_subset = lapply(dataSets_subset, scale, center = center_arg, scale = scale_arg)
+  
+  # Ajout du 10/09/2019
+  dataSets_subset = lapply(dataSets_subset, FUN = function(dat){
+   dat = dat/svd(dat,  nu = 0, nv = 0)$d[1] # première valeur singulière
+  })
 
   dataSets_univar = as.list(data.frame(Reduce("cbind", dataSets_subset)))
-  # ca sert a rien ! on a deja centre AVANT, on ne recentre pas/rescale pas... 
-  # Demandé à Guillem : centrer après a l'air ok pour lui. 
 
   clinical_subset = clinical[row_selected, which(colnames(clinical)%in%c("PR_status", "ER_status", "subtype"))]
   
@@ -261,31 +240,13 @@ res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   
     ## Consensus methodes multivariées
   hc_list_methods$AD = averagedClustering(dataSets_subset)
-  hc_list_methods$DC = directClustering(dataSets_subset_scaled)
-  hc_list_methods$MT = mergeTrees(lapply(dataSets_subset, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
-  
-    ## Méthodes spectrales multivariées
-
-     ### Spectral sur tables séparées
-
-  # hc_list_methods$SDC = directClustering(rSVD_dataSets)
-  # hc_list_methods$SAD = averagedClustering(rSVD_dataSets)
-  # hc_list_methods$SMT = mergeTrees(lapply(rSVD_dataSets, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
-  
-     ## Méthodes univariées
-  # hc_list_methods$ADuni = averagedClustering(dataSets_univar)
-  # hc_list_methods$MTuni = mergeTreesWard(dataSets_univar)
-  
-    ## Méthodes spectrales univariées
-  
-      ### Spectral sur tables separees
-  # hc_list_methods$SADuni = averagedClustering(ds_sp_univar)
-  # hc_list_methods$SMTuni = mergeTreesWard(ds_sp_univar)
+  hc_list_methods$DC = directClustering(dataSets_subset) # Avant : dataSets_subset_scaled
+  hc_list_methods$MC = mergeTrees(lapply(dataSets_subset, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
   
       ### Spectral sur tables concaténée
   hc_list_methods$ScDC = hclust(dist(as.data.frame(rSVD$u %*% diag(rSVD$d)), method = "euclidean"), method = "ward.D2")
   hc_list_methods$ScADuni = averagedClustering(ds_sp_concat_univar)
-  hc_list_methods$ScMTuni = mergeTreesWard(ds_sp_concat_univar)
+  hc_list_methods$ScMCuni = mergeTreesWard(ds_sp_concat_univar)
 
   
   # Calcul des NID min pour ER, PR et subtype
@@ -298,19 +259,15 @@ res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   # Resultat
   return(list("NIDS_res" = NIDS_res, "min_NIDS_res" = min_NIDS_res))
 }, mc.cores = 2)
+save(res_NID, file = "res_NID_center_k_svd_5_10_09_19.RData")
 ```
 
 ```{r}
-# save(res_NID, file = "res_NID_center_k_svd_5_18_07_19.RData")
-save(res_NID, file = "res_NID_center_k_svd_5_24_07_19.RData")
-# save(res_NID, file = "res_NID_center_k_svd_5.RData")
+save(res_NID, file = "res_NID_center_k_svd_5.RData")
 ```
 
 ```{r}
-# load("res_NID_center.RData")
-# load("res_NID__center_k_svd_5.RData")
-# load("res_NID_center_k_svd_5_18_07_19.RData")
-load("res_NID_center_k_svd_5_24_07_19.RData")
+load("res_NID__center_k_svd_5.RData")
 ```
 
 # Exploration des résultats
@@ -322,7 +279,7 @@ NID_min_methods = lapply(res_NID, FUN = function(list_results) return(list_resul
 ```{r}
 res_mat = data.frame(do.call("rbind", lapply(NID_min_methods, FUN = function(x) do.call("rbind", x))))
 colnames(res_mat) = c("subtype", "ER_status", "PR_status")
-res_mat$Method = rep(names(NID_min_methods[[1]]), n_iter)
+res_mat$Method = rep(c("AD", "DC", "MC", "SpDC", "SpAD", "SpMC"), n_iter)
 res_mat$Iteration = rep(1:n_iter, each = length(unique(res_mat$Method)))
 ```
 
@@ -333,7 +290,7 @@ dat3 = res_mat[,which(colnames(res_mat)%in%c("PR_status", "Method", "Iteration")
 
 colnames(dat1)[1] = colnames(dat2)[1] = colnames(dat3)[1] = "NID"
 df_res = rbind(dat1, dat2, dat3)
-df_res$Variable = rep(c("subtype", "ER_status", "PR_status"), each = nrow(dat1))
+df_res$Variable = rep(c("subtype", "ER", "PR"), each = nrow(dat1))
 ```
 
 
@@ -342,16 +299,16 @@ ggplot.all.violin = ggplot(df_res, aes(x = Method, y = NID, fill = Method))  +
   geom_violin(color="black") + 
   facet_grid(Variable~., scales = "free") +
   theme_bw() + guides(fill = "none") + xlab("") + ggtitle("Results per method") + ylab("NID") +
-  scale_fill_manual(values=c("DC" = "antiquewhite", "AD" = "aliceblue", "MT" = "honeydew2", 
-                             "ScADuni" = "azure3" , "ScDC" = "darksalmon", "ScMTuni" = "lavenderblush2" )) +
+    scale_fill_manual(values=c("DC" = "antiquewhite", "AD" = "aliceblue", "MC" = "honeydew2", 
+                             "SpAD" = "azure3" , "SpDC" = "darksalmon", "SpMC" = "lavenderblush2" )) +
   geom_boxplot(width=0.1) +
   stat_summary(fun.y=mean, geom="point", shape = 18, size=1.5, color="red") 
+ggplot.all.violin_methods = ggplot.all.violin
 ggplot.all.violin
 ```
 
 ```{r}
-# ggsave(filename = "Reechant_violin_all_center_k_svd_5.pdf", plot = ggplot.all.violin, device = "pdf", width = 21, height = 15, units = "cm")
-ggsave(filename = "Reechant_violin_all_center_k_svd_5.pdf", plot = ggplot.all.violin, device = "pdf", width = 21, height = 10, units = "cm")
+ggsave(filename = "Reechant_violin_all_vp_k_svd_5.pdf", plot = ggplot.all.violin, device = "pdf", width = 21, height = 10, units = "cm")
 ```
 
 
@@ -359,19 +316,14 @@ ggsave(filename = "Reechant_violin_all_center_k_svd_5.pdf", plot = ggplot.all.vi
 
 ```{r}
 df_res_2 = by(data = df_res, INDICES = list(df_res$Iteration, df_res$Variable), FUN = function(subdata){
-  # iter = unique(subdata$Iteration)
-  # subdata = subdata[,-which(colnames(subdata)=="Iteration")]
-  # print(subdata)
-  # print(subdata$NID
-  # subdata$Method
-  def = data.frame(NID = c(subdata$NID[subdata$Method == "DC"] - subdata$NID[subdata$Method == "AD"],
-                            subdata$NID[subdata$Method == "DC"] - subdata$NID[subdata$Method == "MT"],
-                            subdata$NID[subdata$Method == "MT"] - subdata$NID[subdata$Method == "AD"],
-                           subdata$NID[subdata$Method == "ScDC"] - subdata$NID[subdata$Method == "ScADuni"],
-                           subdata$NID[subdata$Method == "ScDC"] - subdata$NID[subdata$Method == "ScMTuni"],
-                           subdata$NID[subdata$Method == "ScMTuni"] - subdata$NID[subdata$Method == "ScADuni"])
+    def = data.frame(NID = c(subdata$NID[subdata$Method == "DC"] - subdata$NID[subdata$Method == "AD"],
+                            subdata$NID[subdata$Method == "DC"] - subdata$NID[subdata$Method == "MC"],
+                            subdata$NID[subdata$Method == "MC"] - subdata$NID[subdata$Method == "AD"],
+                           subdata$NID[subdata$Method == "SpDC"] - subdata$NID[subdata$Method == "SpAD"],
+                           subdata$NID[subdata$Method == "SpDC"] - subdata$NID[subdata$Method == "SpMC"],
+                           subdata$NID[subdata$Method == "SpMC"] - subdata$NID[subdata$Method == "SpAD"])
                    )
-  def$MethodComp = c("DC - AD", "DC - MT", "MT - AD", "ScDC - ScADuni", "ScDC - ScMTuni", "ScMTuni - ScADuni")
+  def$MethodComp = c("DC - AD", "DC - MC", "MC - AD", "SpDC - SpAD", "SpDC - SpMC", "SpMC - SpAD")
   def$Iteration = unique(subdata$Iteration)
   def$Variable = unique(subdata$Variable)
   return(def)
@@ -387,14 +339,16 @@ ggplot.all.violin = ggplot(df_res_3, aes(x = MethodComp, y = NID, fill = MethodC
   geom_violin(color="black") + 
     facet_grid(Variable~., scales = "free") +
   theme_bw() + guides(fill = "none") + xlab("") + ggtitle("Comparison between methods") + ylab("NID comparison") +
-  scale_fill_manual(values=c("DC - AD" = "aliceblue", "DC - MT" = "antiquewhite", "MT - AD" = "honeydew2",
-                             "ScDC - ScADuni" = "azure3" , "ScDC - ScMTuni" = "darksalmon", "ScMTuni - ScADuni" = "lavenderblush2" )) + 
+  scale_fill_manual(values=c("DC - AD" = "aliceblue", "DC - MC" = "antiquewhite", "MC - AD" = "honeydew2",
+                             "SpDC - SpAD" = "azure3" , "SpDC - SpMC" = "darksalmon", "SpMC - SpAD" = "lavenderblush2" )) +
   geom_boxplot(width=0.1) +
   stat_summary(fun.y=mean, geom="point", shape = 18, size=1.5, color="red") 
+ggplot.all.violin_compare = ggplot.all.violin
 ggplot.all.violin 
 ```
 
-```{r}
-ggsave(filename = "Reechant_violinComp_all.pdf", plot = ggplot.all.violin, device = "pdf", width = 30, height = 14, units = "cm")
-ggsave(filename = "Reechant_violinComp_all.pdf", plot = ggplot.all.violin, device = "pdf", width = 21, height = 10, units = "cm")
+```{r, fig.width = 8, fig.height = 6}
+grid.arrange(ggplot.all.violin_methods, ggplot.all.violin_compare, nrow = 2, ncol = 1)
+ggsave(filename = "Figure5.pdf", plot = grid.arrange(ggplot.all.violin_methods, ggplot.all.violin_compare, nrow = 2, ncol = 1), 
+       device = "pdf", width = 8, height = 6, units = "in")
 ```

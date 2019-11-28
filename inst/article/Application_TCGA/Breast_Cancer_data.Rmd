@@ -1,5 +1,5 @@
 ---
-title: "Application breast cancer (sans tumor)"
+title: "Application breast cancer division par première valeur singulière"
 output:  
   pdf_document:
     toc: true # table of content true
@@ -22,24 +22,22 @@ header-includes:
 geometry: "left=1cm,right=1cm,top=1.5cm,bottom=1.5cm"
 ---
 
+Changements depuis le dernier script : singular value au carré.
+27/09/19 : Re-changement : c'est la racine carré de l'eigenvalue par laquelle il faut diviser, pas par le carré !
+
 ```{r}
 rm(list = ls())
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-```
-
-```{r}
-# setwd("/home/hulot/Documents/these_documents/articles/Tree_agregation_method/Application_breast_cancer_17_04_19/")
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.path = "Breast_cancer_appli/")
 ```
 
 ```{r}
 library(kableExtra)
-library(aricode) # github
+library(aricode)
 library(devtools)
 library(mergeTrees)
-# library(univarclust)
 library(ggplot2)
 library(gridExtra)
 library(RColorBrewer)
@@ -47,6 +45,7 @@ library(dendextend)
 library(tidyverse)
 library(viridis)
 library(rsvd)
+library(svd)
 ```
 
 # Settings
@@ -78,7 +77,7 @@ scale_arg = FALSE
 ## SVD settings
 
 ```{r}
-k_svd = 5 # chercher 5, 10 ou 20
+k_svd = 5
 ```
 
 # Fonctions
@@ -95,53 +94,44 @@ averagedClustering <- function(dataSets) {
   hclust(AD, method = "ward.D2")
 }
 
-
-# Ancienne fonction
-# mergeTreesWard <- function(dataSets) {
-#   hc_list <- lapply(dataSets, FUN = function(x) {
-#     univarclust::ward_1d(x)
-#   })
-#   mergeTrees::mergeTrees(hc_list)
-# } 
-
-# Nouvelle fonction : ajout du 18/07/19
-# Raison : y a peut-être une erreur de code dans celle d'univarclust. 
-# Par contre : elle sera peut-être moins efficace question temps de calcul. 
 mergeTreesWard <- function(dataSets) {
   hc_list <- lapply(dataSets, FUN = function(x) {
-    # univarclust::ward_1d(x)
-    hclust(dist(x, method = "euclidean"), method = "ward.D2")
-        # hclust(dist(x, method = "euclidean"), method = "ward.D")
+    univarclust::ward_1d(x)
   })
   mergeTrees::mergeTrees(hc_list)
-} 
+}
 ```
 
 
 # Chargement des données 
 
 ```{r}
-load("Data/tcga_brca_data.RData")
-load("Data/clinical.RData")
+load("tcga_brca_data.RData")
+load("clinical.RData")
 
 clinic1 = clinic1[order(clinic1$bcr_patient_barcode),]
 zmethyl = zmethyl[order(rownames(zmethyl)),]
 zmirna = zmirna[order(rownames(zmirna)),]
-zmutation = zmutation[order(rownames(zmutation)),]
 zprotein = zprotein[order(rownames(zprotein)),]
 zrna = zrna[order(rownames(zrna)),]
-ztumor = ztumor[order(rownames(ztumor)),]
 
-dataSets = list("methyl" = zmethyl, "mirna" = zmirna,  
-                "protein" = zprotein, "rna" = log2(zrna+1))
-
-## Ajout 17/07/19
-# dataSets = lapply(dataSets, FUN = function(data) t(apply(data, 1, FUN = function(x) x/sum(x))))
-# dataSets = lapply(dataSets, FUN = function(data) data/max(data))
-# dataSets_scaled = lapply(dataSets, scale, center = TRUE, scale = TRUE)
-
-dataSets = lapply(dataSets, scale, center = center_arg, scale = scale_arg) 
+dataSets = list(
+                "methyl" = zmethyl,
+                "mirna" = zmirna,
+                "protein" = zprotein,
+                "rna" = log2(zrna+1))
 ```
+
+```{r}
+dataSets_0 = dataSets = lapply(dataSets, scale, center = center_arg, scale = scale_arg)
+```
+
+```{r}
+dataSets = lapply(dataSets, FUN = function(dat){
+  dat = dat/svd(dat,  nu = 0, nv = 0)$d[1] # division par premiere valeur singuliere
+  })
+```
+
 
 # Traitement des données cliniques
 
@@ -166,7 +156,7 @@ the_bars$subtype[the_bars$subtype=="Luminal A"] = "mistyrose3" ; the_bars$subtyp
 the_bars = the_bars[,which(colnames(the_bars)%in%c("subtype", "ER_status", "PR_status"))]
 ```
 
-# Application des méthodes MT, AD, DC
+# Application des méthodes MC, AD, DC
 
 ```{r}
 hc_list_methods = list() 
@@ -180,8 +170,8 @@ hc_list = lapply(dataSets, FUN = function(x) hclust(dist(x, method = dist_arg), 
 
 ```{r}
 hc_list_methods$AD = averagedClustering(dataSets)
-hc_list_methods$DC = directClustering(lapply(dataSets, scale, center = TRUE, scale = TRUE))
-hc_list_methods$MT = mergeTrees(hc_list)
+hc_list_methods$DC = directClustering(lapply(dataSets, scale, center = TRUE, scale = FALSE))
+hc_list_methods$MC = mergeTrees(hc_list)
 ```
 
 ## Méthodes spectrales multivariées
@@ -201,7 +191,7 @@ hc_sp_list = lapply(dist_sp_list, FUN = function(dist_mat) hclust(dist_mat, meth
 ```{r}
 hc_list_methods$SDC = directClustering(rSVD_dataSets)
 hc_list_methods$SAD = averagedClustering(rSVD_dataSets)
-hc_list_methods$SMT = mergeTrees(hc_sp_list)
+hc_list_methods$SMC = mergeTrees(hc_sp_list)
 ```
 
 ## Méthodes univariees
@@ -212,34 +202,22 @@ dataSets_univar = as.list(data.frame(Reduce("cbind", dataSets)))
 
 ```{r}
 hc_list_methods$ADuni = averagedClustering(dataSets_univar)
-hc_list_methods$MTuni = mergeTreesWard(dataSets_univar)
+hc_list_methods$MCuni = mergeTreesWard(dataSets_univar)
 ```
 
 ## Méthodes spectrale univariees
 
-### Spectral sur tables séparées
-
-```{r}
-dataSets_sp <- lapply(lapply(dataSets, rsvd, k = k_svd), FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
-data_sp_univar <- as.list(as.data.frame(do.call("cbind", dataSets_sp)))
-```
-
-```{r}
-hc_list_methods$SADuni = averagedClustering(data_sp_univar)
-hc_list_methods$SMTuni = mergeTreesWard(data_sp_univar)
-```
-
 ### Spectral sur tables concaténées 
 
 ```{r}
-rSVD <- rsvd(do.call("cbind", dataSets), k = k_svd) 
+rSVD <- rsvd(do.call("cbind", dataSets), k = k_svd)
 dataSets_spectral <- as.list(as.data.frame(rSVD$u %*% diag(rSVD$d)))
 ```
 
 ```{r}
 hc_list_methods$ScDC = hclust(dist(as.data.frame(rSVD$u %*% diag(rSVD$d)), method = "euclidean"), method = "ward.D2")
 hc_list_methods$ScADuni = averagedClustering(dataSets_spectral)
-hc_list_methods$ScMTuni = mergeTreesWard(dataSets_spectral)
+hc_list_methods$ScMCuni = mergeTreesWard(dataSets_spectral)
 ```
 
 ## Sectral sur tables de base
@@ -309,11 +287,6 @@ res = plot_method(hc_list)
 print(res$plot_data)
 ```
 
-```{r, fig.align = "center", fig.width = 9, fig.height = 4}
-# res = plot_method(hc_sp_list)
-# print(res$plot_data)
-```
-
 ### Meilleur NID possible et nombre de groupes associé
 
 ```{r}
@@ -329,7 +302,6 @@ for(clinique in unique(nids_df$clinical)){
   }  
   compteur_clinique = compteur_clinique+2
 }
-# colnames(mat_res_best_nids) =  paste(rep(unique(nids_df$clinical), each = 2), c("NID", "nbgroup"))
 rownames(mat_res_best_nids) = names(hc_list)
 mat_res_sp_data = mat_res_best_nids
 ```
@@ -375,20 +347,4 @@ knitr::kable(round(mat_res_best_nids,2), "latex",booktabs = T, escape = TRUE, li
   add_header_above(c("", rep(c("Nb groupes", "NID"), 3)))%>%
   add_header_above(c("", "ER status" = 2, "PR status" = 2, "Subtype" = 2))%>%
   kable_styling(latex_options =c("repeat_header"), font_size = 10)
-```
-
-
-
-```{r}
-# mat_affichage = rbind(mat_res_data, mat_res_sp_data, mat_res_methods)
-# knitr::kable(round(mat_affichage,2), "latex",booktabs = T, escape = TRUE, linesep = "", row.names = TRUE)%>%
-#   add_header_above(c("", rep(c("Nb groupes", "NID"), 3)))%>%
-#   add_header_above(c("", "ER status" = 2, "PR status" = 2, "Subtype" = 2))%>%
-#   pack_rows("DataSets", 1, length(dataSets))%>%
-#   pack_rows("Spectral DataSets", length(dataSets)+1,length(dataSets)*2)%>%
-#   pack_rows("Multivariates Methods", length(dataSets)*2+1, length(dataSets)*2+3)%>%
-#   pack_rows("Multivariates Spectral Methods", length(dataSets)*2+4, length(dataSets)*2+6)%>%
-#   pack_rows("Univariates Methods", length(dataSets)*2+7, length(dataSets)*2+8)%>%
-#   pack_rows("Univariates Spectral Methods", length(dataSets)*2+9, nrow(mat_affichage))%>%
-#   kable_styling(latex_options =c("repeat_header"), font_size = 10)
 ```
