@@ -1,0 +1,446 @@
+---
+title: "Reechantillonnage pour NID (sans tumor) : division par première valeur propre"
+output:  
+  pdf_document:
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    highlight: tango   
+    keep_tex:  true
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+- \usepackage[normalem]{ulem}
+geometry: "left=1cm,right=1cm,top=1.5cm,bottom=1.5cm"
+---
+
+
+```{r}
+rm(list = ls())
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.path = "Reechant/")
+```
+
+```{r}
+library(kableExtra)
+library(aricode) # github
+library(devtools)
+library(mergeTrees)
+library(univarclust)
+library(ggplot2)
+library(gridExtra)
+library(RColorBrewer)
+library(dendextend)
+library(tidyverse)
+library(viridis)
+library(rsvd)
+```
+# Settings
+
+```{r}
+dist_arg = "euclidean" 
+linkage_arg = "ward.D2"
+# linkage_arg = "single"
+new_plot_window = FALSE 
+par(mar = c(2,2,2,2))
+par(mfrow = c(1,1))
+
+# Figure settings
+cex.main_arg = 1.2
+cex.axis_arg = 1.2
+cex.rowlabels_arg = 1.1
+height_arg = 3.92
+width_arg = 5.4
+mar_arg = c(3,4.5,1,0)
+```
+
+## Scale/center settings
+
+```{r}
+center_arg = TRUE
+scale_arg = FALSE
+```
+
+## SVD settings
+
+```{r}
+k_svd = 5 # chercher 5, 10 ou 20
+``` 
+
+# Fonctions
+
+Piquées à Julien
+
+```{r}
+directClustering <- function(dataSets) {
+  hclust(dist(do.call("cbind", dataSets), method = "euclidean"), method = "ward.D2")
+}
+
+averagedClustering <- function(dataSets) {
+  AD <- Reduce("+", lapply(dataSets, dist, method = "euclidean")) / length(dataSets)
+  hclust(AD, method = "ward.D2")
+}
+
+mergeTreesWard <- function(dataSets) {
+  hc_list <- lapply(dataSets, FUN = function(x) {
+    # univarclust::ward_1d(x)
+    hclust(dist(x, method = "euclidean"), method = "ward.D2")
+        # hclust(dist(x, method = "euclidean"), method = "ward.D")
+  })
+  mergeTrees::mergeTrees(hc_list)
+} 
+```
+
+
+# Chargement des données 
+
+```{r}
+load("tcga_brca_data.RData")
+load("clinical.RData")
+
+clinic1 = clinic1[order(clinic1$bcr_patient_barcode),]
+zmethyl = zmethyl[order(rownames(zmethyl)),]
+zmirna = zmirna[order(rownames(zmirna)),]
+zprotein = zprotein[order(rownames(zprotein)),]
+zrna = zrna[order(rownames(zrna)),]
+
+dataSets = list("methyl" = zmethyl, "mirna" = zmirna,  
+                "protein" = zprotein, "rna" = log2(zrna+1))
+```
+
+# Traitement des données cliniques
+
+```{r}
+clinical = clinic1
+rownames(clinical) = clinical$bcr_patient_barcode
+clinical = clinical[,-which(colnames(clinical)=="bcr_patient_barcode")]
+```
+
+## Légende pour les clustering
+
+```{r}
+# Legende:
+the_bars = data.frame(apply(clinical, 2, as.character))
+the_bars$subtype = as.character(the_bars$subtype)
+
+the_bars$ER_status = ifelse(the_bars$ER_status=="Positive", "grey88", "black")
+the_bars$PR_status = ifelse(the_bars$PR_status=="Positive", "grey88", "black")
+the_bars$subtype[the_bars$subtype=="Basal-like"] = "dimgray" ; the_bars$subtype[the_bars$subtype=="HER2-enriched"] = "blueviolet"; 
+the_bars$subtype[the_bars$subtype=="Luminal A"] = "mistyrose3" ; the_bars$subtype[the_bars$subtype=="Luminal B"] = "chocolate" 
+
+the_bars = the_bars[,which(colnames(the_bars)%in%c("subtype", "ER_status", "PR_status"))]
+```
+
+
+## Légende pour les clustering
+
+```{r}
+# Legende:
+the_bars = data.frame(apply(clinical, 2, as.character))
+the_bars$subtype = as.character(the_bars$subtype)
+
+the_bars$ER_status = ifelse(the_bars$ER_status=="Positive", "grey88", "black")
+the_bars$PR_status = ifelse(the_bars$PR_status=="Positive", "grey88", "black")
+the_bars$subtype[the_bars$subtype=="Basal-like"] = "dimgray" ; the_bars$subtype[the_bars$subtype=="HER2-enriched"] = "blueviolet"; 
+the_bars$subtype[the_bars$subtype=="Luminal A"] = "mistyrose3" ; the_bars$subtype[the_bars$subtype=="Luminal B"] = "chocolate" 
+
+the_bars = the_bars[,which(colnames(the_bars)%in%c("subtype", "ER_status", "PR_status"))]
+```
+
+#  NID exploration fonction @ Julien
+
+## Parametre pour niveau de coupure maximum
+```{r}
+cutree_index_max = 50
+```
+
+## Fonction get_nid
+
+```{r}
+get_nid <- function(clustering, reference) {
+  clusterings <- cutree(clustering, seq.int(1:cutree_index_max)) %>% as.data.frame() %>% as.list()
+  nid <- map_dbl(clusterings, ~NID(., reference))  
+  nid
+}
+```
+
+# Création des sets de rééchantillonnage
+
+## Settings du rééchantillonnage
+
+```{r}
+n_iter = 100 # nombre de subsets créés
+prop_sampling = 0.8 # proportion de la table prise
+replace_arg = TRUE # pour faire du bootstrap
+```
+
+## Boucle
+
+```{r}
+samples_numbers = lapply(1:n_iter, FUN = function(iteration, prop_sampling, replace_arg){
+  set.seed(iteration)
+  sample(x = 1:nrow(dataSets$methyl), size = ceiling(prop_sampling*nrow(dataSets$methyl)), replace = replace_arg)
+},  prop_sampling = prop_sampling, replace_arg = replace_arg)
+```
+
+```{r}
+length(samples_numbers)
+```
+
+```{r}
+plot(table(unlist(samples_numbers)), xlab = "Individuals", ylab = "Number of selections")
+abline(h = min(table(unlist(samples_numbers))), col = "red", lty = "dashed", lw = 2)
+```
+
+# Estimation des NID minimum pour les échantillonnages
+
+```{r, eval = FALSE}
+library(parallel)
+res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
+  if(indice_subset %% 10 == 0) print(indice_subset)
+
+  # Creation des tables subset
+  row_selected = samples_numbers[[indice_subset]]
+  dataSets_subset = lapply(dataSets, FUN = function(datatable) datatable[row_selected, ])
+  dataSets_subset = lapply(dataSets_subset, FUN = function(x) {rownames(x) = 1:nrow(x) ; return(x)})
+    
+  dataSets_subset = lapply(dataSets_subset, scale, center = center_arg, scale = scale_arg)
+  
+  # Ajout du 10/09/2019
+  dataSets_subset = lapply(dataSets_subset, FUN = function(dat){
+   dat = dat/svd(dat,  nu = 0, nv = 0)$d[1] # première valeur singulière
+  })
+
+  dataSets_univar = as.list(data.frame(Reduce("cbind", dataSets_subset)))
+
+  clinical_subset = clinical[row_selected, which(colnames(clinical)%in%c("PR_status", "ER_status", "subtype"))]
+  
+  # Application spectral
+  
+    ## Spectral sur tables séparées
+  # rSVD_dataSets = lapply(lapply(dataSets_subset, rsvd, k = k_svd), FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
+  rSVD_dataSets = lapply(lapply(dataSets_subset, svd, nu = k_svd, nv = 0), FUN = function(svd_res) svd_res$u[,1:k_svd]%*% diag(svd_res$d[1:k_svd]))
+  ds_sp_univar <- as.list(as.data.frame(do.call("cbind", rSVD_dataSets)))
+  
+    ## spectral sur tables concaténées
+  # rSVD <- rsvd(do.call("cbind", dataSets_subset), k = k_svd) 
+  rSVD <- svd(do.call("cbind", dataSets_subset), nu = k_svd, nv = 0) 
+  ds_sp_concat_univar <- as.list(as.data.frame(rSVD$u[,1:k_svd] %*% diag(rSVD$d[1:k_svd])))
+  
+  # Méthodes consensus
+  hc_list_methods = list()
+  
+    ## Consensus methodes multivariées
+  hc_list_methods$AD = averagedClustering(dataSets_subset)
+  hc_list_methods$DC = directClustering(dataSets_subset) # Avant : dataSets_subset_scaled
+  hc_list_methods$MC = mergeTrees(lapply(dataSets_subset, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
+  
+      ### Spectral sur tables concaténée
+  hc_list_methods$ScDC = hclust(dist(as.data.frame(rSVD$u[,1:k_svd] %*% diag(rSVD$d[1:k_svd])), method = "euclidean"), method = "ward.D2")
+  hc_list_methods$ScADuni = averagedClustering(ds_sp_concat_univar)
+  hc_list_methods$ScMCuni = mergeTreesWard(ds_sp_concat_univar)
+
+  
+  # Calcul des NID min pour ER, PR et subtype
+  NIDS_res = lapply(hc_list_methods, FUN = function(dendrogram){
+    apply(clinical_subset, 2, FUN = function(classif) get_nid(dendrogram, classif))
+  })
+
+  min_NIDS_res = lapply(NIDS_res, FUN = function(dataFrame_res) apply(dataFrame_res, 2, min))
+
+  # Resultat
+  return(list("NIDS_res" = NIDS_res, "min_NIDS_res" = min_NIDS_res))
+}, mc.cores = 2)
+# save(res_NID, file = "res_NID_center_k_svd_5_20_01_20.RData")
+save(res_NID, file = "res_NID_center_k_svd_5.RData")
+```
+
+```{r}
+
+```
+
+```{r}
+load("res_NID_center_k_svd_5.RData")
+```
+
+# Exploration des résultats
+
+```{r}
+NID_min_methods = lapply(res_NID, FUN = function(list_results) return(list_results$min_NIDS_res))
+```
+
+```{r}
+res_mat = data.frame(do.call("rbind", lapply(NID_min_methods, FUN = function(x) do.call("rbind", x))))
+colnames(res_mat) = c("subtype", "ER_status", "PR_status")
+res_mat$Method = rep(c("AD", "DC", "MC", "SpDC", "SpAD", "SpMC"), n_iter)
+res_mat$Iteration = rep(1:n_iter, each = length(unique(res_mat$Method)))
+```
+
+```{r}
+dat1 = res_mat[,which(colnames(res_mat)%in%c("subtype", "Method", "Iteration"))]
+dat2 = res_mat[,which(colnames(res_mat)%in%c("ER_status", "Method", "Iteration"))]
+dat3 = res_mat[,which(colnames(res_mat)%in%c("PR_status", "Method", "Iteration"))]
+
+colnames(dat1)[1] = colnames(dat2)[1] = colnames(dat3)[1] = "NID"
+df_res = rbind(dat1, dat2, dat3)
+df_res$Variable = rep(c("subtype", "ER", "PR"), each = nrow(dat1))
+```
+
+
+```{r, fig.width = 7.5, fig.height = 4.5}
+ggplot.all.violin = ggplot(df_res, aes(x = Method, y = NID, fill = Method))  +
+  geom_violin(color="black") + 
+  facet_grid(Variable~., scales = "free") +
+  theme_bw() + guides(fill = "none") + xlab("") + ggtitle("Results per method") + ylab("NID") +
+    scale_fill_manual(values=c("DC" = "antiquewhite", "AD" = "aliceblue", "MC" = "honeydew2", 
+                             "SpAD" = "azure3" , "SpDC" = "darksalmon", "SpMC" = "lavenderblush2" )) +
+  geom_boxplot(width=0.1) +
+  stat_summary(fun.y=mean, geom="point", shape = 18, size=1.5, color="red") 
+ggplot.all.violin_methods = ggplot.all.violin
+ggplot.all.violin
+```
+
+```{r}
+ggsave(filename = "Reechant_violin_all_vp_k_svd_5.pdf", plot = ggplot.all.violin, device = "pdf", width = 21, height = 10, units = "cm")
+```
+
+
+## Violin plot : comparaisons entre méthodes
+
+```{r}
+df_res_2 = by(data = df_res, INDICES = list(df_res$Iteration, df_res$Variable), FUN = function(subdata){
+    def = data.frame(NID = c(subdata$NID[subdata$Method == "DC"] - subdata$NID[subdata$Method == "AD"],
+                            subdata$NID[subdata$Method == "DC"] - subdata$NID[subdata$Method == "MC"],
+                            subdata$NID[subdata$Method == "MC"] - subdata$NID[subdata$Method == "AD"],
+                           subdata$NID[subdata$Method == "SpDC"] - subdata$NID[subdata$Method == "SpAD"],
+                           subdata$NID[subdata$Method == "SpDC"] - subdata$NID[subdata$Method == "SpMC"],
+                           subdata$NID[subdata$Method == "SpMC"] - subdata$NID[subdata$Method == "SpAD"])
+                   )
+  def$MethodComp = c("DC - AD", "DC - MC", "MC - AD", "SpDC - SpAD", "SpDC - SpMC", "SpMC - SpAD")
+  def$Iteration = unique(subdata$Iteration)
+  def$Variable = unique(subdata$Variable)
+  return(def)
+}) 
+```
+
+```{r}
+df_res_3 = do.call(rbind, df_res_2)
+```
+
+```{r, fig.width = 7.5, fig.height = 4.5}
+ggplot.all.violin = ggplot(df_res_3, aes(x = MethodComp, y = NID, fill = MethodComp))  +
+  geom_violin(color="black") + 
+    facet_grid(Variable~., scales = "free") +
+  theme_bw() + guides(fill = "none") + xlab("") + ggtitle("Comparison between methods") + ylab("NID comparison") +
+  scale_fill_manual(values=c("DC - AD" = "aliceblue", "DC - MC" = "antiquewhite", "MC - AD" = "honeydew2",
+                             "SpDC - SpAD" = "azure3" , "SpDC - SpMC" = "darksalmon", "SpMC - SpAD" = "lavenderblush2" )) +
+  geom_boxplot(width=0.1) +
+  stat_summary(fun.y=mean, geom="point", shape = 18, size=1.5, color="red") 
+ggplot.all.violin_compare = ggplot.all.violin
+ggplot.all.violin 
+```
+
+```{r, fig.width = 8, fig.height = 6}
+grid.arrange(ggplot.all.violin_methods, ggplot.all.violin_compare, nrow = 2, ncol = 1)
+ggsave(filename = "Figure5.pdf", plot = grid.arrange(ggplot.all.violin_methods, ggplot.all.violin_compare, nrow = 2, ncol = 1), 
+       device = "pdf", width = 8, height = 6, units = "in")
+```
+
+# Exploration des résultats BIS
+
+```{r}
+res_MC = data.frame("Essai" = rep(1:length(res_NID), each = nrow(res_NID[[1]]$NIDS_res[[1]])), 
+                    "N" = rep(1:nrow(res_NID[[1]]$NIDS_res[[1]]), times = length(res_NID)),
+                    "Method" = "MC",
+                    do.call("rbind", lapply(res_NID, FUN = function(x) x$NIDS_res$MC)))
+
+res_AD = data.frame("Essai" = rep(1:length(res_NID), each = nrow(res_NID[[1]]$NIDS_res[[1]])), 
+                    "N" = rep(1:nrow(res_NID[[1]]$NIDS_res[[1]]), times = length(res_NID)),
+                    "Method" = "AD",
+                    do.call("rbind", lapply(res_NID, FUN = function(x) x$NIDS_res$AD)))
+
+res_DC = data.frame("Essai" = rep(1:length(res_NID), each = nrow(res_NID[[1]]$NIDS_res[[1]])), 
+                    "N" = rep(1:nrow(res_NID[[1]]$NIDS_res[[1]]), times = length(res_NID)),
+                    "Method" = "DC",
+                    do.call("rbind", lapply(res_NID, FUN = function(x) x$NIDS_res$DC)))
+```
+
+```{r}
+res_ScMC = data.frame("Essai" = rep(1:length(res_NID), each = nrow(res_NID[[1]]$NIDS_res[[1]])), 
+                    "N" = rep(1:nrow(res_NID[[1]]$NIDS_res[[1]]), times = length(res_NID)),
+                    "Method" = "ScMC",
+                    do.call("rbind", lapply(res_NID, FUN = function(x) x$NIDS_res$ScMCuni)))
+
+res_ScAD = data.frame("Essai" = rep(1:length(res_NID), each = nrow(res_NID[[1]]$NIDS_res[[1]])), 
+                    "N" = rep(1:nrow(res_NID[[1]]$NIDS_res[[1]]), times = length(res_NID)),
+                    "Method" = "ScAD",
+                    do.call("rbind", lapply(res_NID, FUN = function(x) x$NIDS_res$ScADuni)))
+
+res_ScDC = data.frame("Essai" = rep(1:length(res_NID), each = nrow(res_NID[[1]]$NIDS_res[[1]])), 
+                    "N" = rep(1:nrow(res_NID[[1]]$NIDS_res[[1]]), times = length(res_NID)),
+                    "Method" = "ScDC",
+                    do.call("rbind", lapply(res_NID, FUN = function(x) x$NIDS_res$ScDC)))
+```
+
+```{r}
+res_methods = do.call("rbind", list(res_MC, res_AD, res_DC, res_ScMC, res_ScAD, res_ScDC))
+```
+
+```{r}
+library(reshape2)
+res_methods_2 = melt(res_methods, id.vars = c("N", "Essai", "Method"))
+colnames(res_methods_2) = c("N", "Essai", "Method", "Clinical", "NID")
+```
+
+
+```{r}
+res_NID_methods = aggregate(res_methods_2$NID, by = list(factor(res_methods_2$N), factor(res_methods_2$Method), factor(res_methods_2$Clinical)), FUN = function(x) c("Min" = min(x),"Median" = median(x),"Mean" = mean(x),  "Max" = max(x), "SD" = sd(x)))
+```
+
+```{r}
+res_NID_methods_2 = data.frame("N" = res_NID_methods$Group.1, "Method" = res_NID_methods$Group.2, "Clinical" = res_NID_methods$Group.3, res_NID_methods$x)
+```
+
+```{r}
+res_NID_methods_3 = do.call("rbind", by(res_NID_methods_2, INDICES = list(res_NID_methods_2$Method, res_NID_methods_2$Clinical), FUN = function(x) x[which.min(x$Median),]))
+```
+
+```{r}
+res_NID_methods_4 = do.call("rbind", by(res_NID_methods_2, INDICES = list(res_NID_methods_2$Method, res_NID_methods_2$Clinical), FUN = function(x) x[which.min(x$Mean),]))
+```
+
+```{r}
+df = res_NID_methods_3
+df[,which(colnames(df)%in%c("Min", "Median", "Mean", "Max", "SD"))] = round(df[,which(colnames(df)%in%c("Min", "Median", "Mean", "Max", "SD"))], 2)
+df = df[,-which(colnames(df)=="Clinical")]
+df = df[,match(c("Method", "N", "Min", "Mean", "Median", "Max", "SD"), colnames(df))]
+
+knitr::kable(df, row.names = FALSE) %>%
+  kable_styling() %>%
+  add_header_above(c("Minimum median and associated number of groups" = ncol(df))) %>%
+  pack_rows(index = c("Subtype" = 6, "ER Status" = 6, "PR Status" = 6))
+```
+
+```{r}
+df = res_NID_methods_4
+df[,which(colnames(df)%in%c("Min", "Median", "Mean", "Max", "SD"))] = round(df[,which(colnames(df)%in%c("Min", "Median", "Mean", "Max", "SD"))], 2)
+df = df[,-which(colnames(df)=="Clinical")]
+df = df[,match(c("Method", "N", "Min", "Mean", "Median", "Max", "SD"), colnames(df))]
+
+knitr::kable(df, row.names = FALSE) %>%
+  kable_styling() %>%
+  add_header_above(c("Minimum mean and associated number of groups" = ncol(df))) %>%
+  pack_rows(index = c("Subtype" = 6, "ER Status" = 6, "PR Status" = 6))
+```
+
