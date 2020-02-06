@@ -1,5 +1,5 @@
 ---
-title: "Application breast cancer division par première valeur singulière"
+title: "Application breast cancer"
 output:  
   pdf_document:
     toc: true # table of content true
@@ -23,10 +23,6 @@ header-includes:
 geometry: "left=1cm,right=1cm,top=1.5cm,bottom=1.5cm"
 ---
 
-Changements depuis le dernier script : singular value au carré.
-27/09/19 : Re-changement : c'est la racine carré de l'eigenvalue par laquelle il faut diviser, pas par le carré !
-15/01/20 : Re-Changement : on essai la svd tout court. 
-
 ```{r}
 rm(list = ls())
 ```
@@ -45,8 +41,6 @@ library(gridExtra)
 library(RColorBrewer)
 library(dendextend)
 library(tidyverse)
-library(viridis)
-library(rsvd)
 library(svd)
 ```
 
@@ -55,7 +49,6 @@ library(svd)
 ```{r}
 dist_arg = "euclidean" 
 linkage_arg = "ward.D2"
-# linkage_arg = "single"
 new_plot_window = FALSE 
 par(mar = c(2,2,2,2))
 par(mfrow = c(1,1))
@@ -84,7 +77,7 @@ k_svd = 5
 
 # Fonctions
 
-Piquées à Julien
+@Julien
 
 ```{r}
 directClustering <- function(dataSets) {
@@ -181,18 +174,18 @@ hc_list_methods$MC = mergeTrees(hc_list)
 ### Spectral sur tables séparées
 
 ```{r}
-rSVD <- lapply(dataSets, svd, nu = k_svd, nv = 0) ### MODIF : pas rsvd, svd tout court.
-rSVD_dataSets = lapply(rSVD, FUN = function(svd_res) svd_res$u %*% diag(svd_res$d[1:k_svd]))
+SVD <- lapply(dataSets, svd, nu = k_svd, nv = 0) ### MODIF : pas SVD, svd tout court.
+SVD_dataSets = lapply(SVD, FUN = function(svd_res) svd_res$u %*% diag(svd_res$d[1:k_svd]))
 ```
 
 ```{r}
-dist_sp_list = lapply(rSVD_dataSets, FUN = function(dat) dist(dat, method = dist_arg))
+dist_sp_list = lapply(SVD_dataSets, FUN = function(dat) dist(dat, method = dist_arg))
 hc_sp_list = lapply(dist_sp_list, FUN = function(dist_mat) hclust(dist_mat, method = linkage_arg))
 ```
 
 ```{r}
-hc_list_methods$SDC = directClustering(rSVD_dataSets)
-hc_list_methods$SAD = averagedClustering(rSVD_dataSets)
+hc_list_methods$SDC = directClustering(SVD_dataSets)
+hc_list_methods$SAD = averagedClustering(SVD_dataSets)
 hc_list_methods$SMC = mergeTrees(hc_sp_list)
 ```
 
@@ -212,12 +205,12 @@ hc_list_methods$MCuni = mergeTreesWard(dataSets_univar)
 ### Spectral sur tables concaténées 
 
 ```{r}
-rSVD <- svd(do.call("cbind", dataSets), nu = k_svd, nv = 0) ### MODIF : pas rsvd, svd tout court.
-dataSets_spectral <- as.list(as.data.frame(rSVD$u %*% diag(rSVD$d[1:k_svd])))
+SVD <- svd(do.call("cbind", dataSets), nu = k_svd, nv = 0) ### MODIF : pas SVD, svd tout court.
+dataSets_spectral <- as.list(as.data.frame(SVD$u %*% diag(SVD$d[1:k_svd])))
 ```
 
 ```{r}
-hc_list_methods$ScDC = hclust(dist(as.data.frame(rSVD$u %*% diag(rSVD$d[1:k_svd])), method = "euclidean"), method = "ward.D2")
+hc_list_methods$ScDC = hclust(dist(as.data.frame(SVD$u %*% diag(SVD$d[1:k_svd])), method = "euclidean"), method = "ward.D2")
 hc_list_methods$ScADuni = averagedClustering(dataSets_spectral)
 hc_list_methods$ScMCuni = mergeTreesWard(dataSets_spectral)
 ```
@@ -225,11 +218,11 @@ hc_list_methods$ScMCuni = mergeTreesWard(dataSets_spectral)
 ## Sectral sur tables de base
 
 ```{r}
-rSVD <- lapply(dataSets, svd, nu = k_svd)
-rSVD_dataSets = lapply(rSVD, FUN = function(svd_res) svd_res$u%*% diag(svd_res$d[1:k_svd]))
-names(rSVD_dataSets) = paste0(names(rSVD_dataSets), "sp")
+SVD <- lapply(dataSets, svd, nu = k_svd)
+SVD_dataSets = lapply(SVD, FUN = function(svd_res) svd_res$u%*% diag(svd_res$d[1:k_svd]))
+names(SVD_dataSets) = paste0(names(SVD_dataSets), "sp")
 
-hc_list = c(hc_list, lapply(rSVD_dataSets, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
+hc_list = c(hc_list, lapply(SVD_dataSets, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
 ```
 
 # Comparaison des arbres des tables de base 
@@ -299,8 +292,7 @@ aris <- rbind(aris_ER_status, aris_PR_status, aris_subtype)
 # nids_aris = rbind(nids, aris)
 
 nids %>% group_by(DataSet) %>% 
-  ggplot(aes(x = ngroup, y = NID, color = DataSet))  + geom_line() + facet_grid(.~clinical) + theme_bw() + theme(legend.position="bottom")+
-   scale_color_viridis(discrete = TRUE) -> plot_data
+  ggplot(aes(x = ngroup, y = NID, color = DataSet))  + geom_line() + facet_grid(.~clinical) + theme_bw() + theme(legend.position="bottom") -> plot_data
 
 return(list(nids = nids, plot_data = plot_data, aris = aris))
 }

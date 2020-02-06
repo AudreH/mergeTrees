@@ -43,8 +43,6 @@ library(gridExtra)
 library(RColorBrewer)
 library(dendextend)
 library(tidyverse)
-library(viridis)
-library(rsvd)
 ```
 # Settings
 
@@ -75,7 +73,7 @@ scale_arg = FALSE
 ## SVD settings
 
 ```{r}
-k_svd = 5 # chercher 5, 10 ou 20
+k_svd = 5 
 ``` 
 
 # Fonctions
@@ -94,9 +92,7 @@ averagedClustering <- function(dataSets) {
 
 mergeTreesWard <- function(dataSets) {
   hc_list <- lapply(dataSets, FUN = function(x) {
-    # univarclust::ward_1d(x)
-    hclust(dist(x, method = "euclidean"), method = "ward.D2")
-        # hclust(dist(x, method = "euclidean"), method = "ward.D")
+    univarclust::ward_1d(x)
   })
   mergeTrees::mergeTrees(hc_list)
 } 
@@ -180,9 +176,9 @@ get_nid <- function(clustering, reference) {
 ## Settings du rééchantillonnage
 
 ```{r}
-n_iter = 100 # nombre de subsets créés
-prop_sampling = 0.8 # proportion de la table prise
-replace_arg = TRUE # pour faire du bootstrap
+n_iter = 100
+prop_sampling = 0.8 
+replace_arg = TRUE
 ```
 
 ## Boucle
@@ -205,7 +201,7 @@ abline(h = min(table(unlist(samples_numbers))), col = "red", lty = "dashed", lw 
 
 # Estimation des NID minimum pour les échantillonnages
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 library(parallel)
 res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   if(indice_subset %% 10 == 0) print(indice_subset)
@@ -229,14 +225,12 @@ res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   # Application spectral
   
     ## Spectral sur tables séparées
-  # rSVD_dataSets = lapply(lapply(dataSets_subset, rsvd, k = k_svd), FUN = function(svd_res) svd_res$u%*% diag(svd_res$d))
-  rSVD_dataSets = lapply(lapply(dataSets_subset, svd, nu = k_svd, nv = 0), FUN = function(svd_res) svd_res$u[,1:k_svd]%*% diag(svd_res$d[1:k_svd]))
-  ds_sp_univar <- as.list(as.data.frame(do.call("cbind", rSVD_dataSets)))
+  SVD_dataSets = lapply(lapply(dataSets_subset, svd, nu = k_svd, nv = 0), FUN = function(svd_res) svd_res$u[,1:k_svd]%*% diag(svd_res$d[1:k_svd]))
+  ds_sp_univar <- as.list(as.data.frame(do.call("cbind", SVD_dataSets)))
   
     ## spectral sur tables concaténées
-  # rSVD <- rsvd(do.call("cbind", dataSets_subset), k = k_svd) 
-  rSVD <- svd(do.call("cbind", dataSets_subset), nu = k_svd, nv = 0) 
-  ds_sp_concat_univar <- as.list(as.data.frame(rSVD$u[,1:k_svd] %*% diag(rSVD$d[1:k_svd])))
+  SVD <- svd(do.call("cbind", dataSets_subset), nu = k_svd, nv = 0) 
+  ds_sp_concat_univar <- as.list(as.data.frame(SVD$u[,1:k_svd] %*% diag(SVD$d[1:k_svd])))
   
   # Méthodes consensus
   hc_list_methods = list()
@@ -247,7 +241,7 @@ res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   hc_list_methods$MC = mergeTrees(lapply(dataSets_subset, FUN = function(x) hclust(dist(x, method = dist_arg), method = linkage_arg)))
   
       ### Spectral sur tables concaténée
-  hc_list_methods$ScDC = hclust(dist(as.data.frame(rSVD$u[,1:k_svd] %*% diag(rSVD$d[1:k_svd])), method = "euclidean"), method = "ward.D2")
+  hc_list_methods$ScDC = hclust(dist(as.data.frame(SVD$u[,1:k_svd] %*% diag(SVD$d[1:k_svd])), method = "euclidean"), method = "ward.D2")
   hc_list_methods$ScADuni = averagedClustering(ds_sp_concat_univar)
   hc_list_methods$ScMCuni = mergeTreesWard(ds_sp_concat_univar)
 
@@ -262,16 +256,6 @@ res_NID = mclapply(1:length(samples_numbers), FUN = function(indice_subset){
   # Resultat
   return(list("NIDS_res" = NIDS_res, "min_NIDS_res" = min_NIDS_res))
 }, mc.cores = 2)
-# save(res_NID, file = "res_NID_center_k_svd_5_20_01_20.RData")
-save(res_NID, file = "res_NID_center_k_svd_5.RData")
-```
-
-```{r}
-
-```
-
-```{r}
-load("res_NID_center_k_svd_5.RData")
 ```
 
 # Exploration des résultats
